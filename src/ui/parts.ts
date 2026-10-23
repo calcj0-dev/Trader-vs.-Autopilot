@@ -1,6 +1,6 @@
 // 画面に共通の部品（設計書 5.4）
 
-import { config } from '../data';
+import { config, type GameConfig } from '../data';
 import { formatMoney, getCurrency } from '../currency';
 import { t } from '../i18n';
 import { onSettingsChange, settings } from '../settings';
@@ -8,14 +8,14 @@ import { APP_VERSION, formatVersion } from '../version';
 import { h } from './dom';
 
 /** 文言に差し込むゲームの数値。期間・速さ・初期資金を変えると文言も変わる（T-13） */
-export function gameVars() {
+export function gameVars(g: Pick<GameConfig, 'gameMonths' | 'gameSeconds'> = config) {
   const c = getCurrency();
   return {
     initialCash: formatMoney(c.initialCash, 'whole'),
-    years: config.gameMonths / 12,
-    months: config.gameMonths,
-    seconds: config.gameSeconds,
-    monthly: formatMoney(c.initialCash / config.gameMonths, 'plain'),
+    years: g.gameMonths / 12,
+    months: g.gameMonths,
+    seconds: g.gameSeconds,
+    monthly: formatMoney(c.initialCash / g.gameMonths, 'plain'),
   };
 }
 

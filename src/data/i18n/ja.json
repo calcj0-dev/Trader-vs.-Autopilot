@@ -35,7 +35,11 @@
   "play.buy": "買",
   "play.sell": "売",
   "play.pause": "一時停止",
-  "play.tempToResult": "結果へ（仮）",
+  "play.countdownGo": "スタート！",
+  "play.resuming": "再開します",
+  "play.ended": "{years}年たちました",
+  "play.ordering": "注文中…",
+  "play.orderedThisMonth": "今月は注文済み",
 
   "result.heading": "{years}年の結果",
   "result.share": "Xでシェア",

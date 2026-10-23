@@ -38,7 +38,11 @@ export const MESSAGE_KEYS = [
   'play.buy',
   'play.sell',
   'play.pause',
-  'play.tempToResult',
+  'play.countdownGo',
+  'play.resuming',
+  'play.ended',
+  'play.ordering',
+  'play.orderedThisMonth',
 
   'result.heading',
   'result.share',

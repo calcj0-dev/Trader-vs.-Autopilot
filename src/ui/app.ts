@@ -8,6 +8,8 @@ export type App = {
   openModal(modal: ModalName): void;
   closeModal(): void;
   closeAllModals(): void;
+  /** 利用者の操作で重ね表示がすべて閉じたときに呼ばれる（画面の切り替えで閉じたときは呼ばれない）。戻り値で解除 */
+  onModalClosed(fn: (last: ModalName) => void): () => void;
   readonly screen: ScreenName;
 };
 
@@ -31,6 +33,7 @@ export function createApp(
   let screenName: ScreenName = 'title';
   // 重ね表示から別の重ね表示を開いたとき（一時停止→設定）に、閉じたら元へ戻るため
   const stack: ModalName[] = [];
+  const closedListeners = new Set<(last: ModalName) => void>();
 
   const renderModal = (name: ModalName) => {
     dialog.replaceChildren(modals[name](app));
@@ -56,14 +59,21 @@ export function createApp(
       renderModal(name);
     },
     closeModal() {
-      stack.pop();
+      const last = stack.pop();
       const prev = stack[stack.length - 1];
       if (prev) renderModal(prev);
-      else if (dialog.open) dialog.close();
+      else {
+        if (dialog.open) dialog.close();
+        if (last) for (const fn of [...closedListeners]) fn(last);
+      }
     },
     closeAllModals() {
       stack.length = 0;
       if (dialog.open) dialog.close();
+    },
+    onModalClosed(fn) {
+      closedListeners.add(fn);
+      return () => closedListeners.delete(fn);
     },
   };
 

@@ -4,6 +4,7 @@ import { t } from '../../i18n';
 import type { ScreenFactory } from '../app';
 import { button, h, linkButton } from '../dom';
 import { gameVars, soundButton } from '../parts';
+import { ensureHistoryEntry } from './play';
 
 export const resultScreen: ScreenFactory = (app) => {
   const sound = soundButton();
@@ -22,5 +23,15 @@ export const resultScreen: ScreenFactory = (app) => {
     ]),
     linkButton(t('result.backToTitle'), () => app.go('title')),
   ]);
-  return { el, unmount: sound.dispose };
+  // ブラウザの「戻る」でタイトルへ（設計書 5.3）
+  const onPopState = () => app.go('title');
+  ensureHistoryEntry();
+  window.addEventListener('popstate', onPopState);
+  return {
+    el,
+    unmount() {
+      sound.dispose();
+      window.removeEventListener('popstate', onPopState);
+    },
+  };
 };

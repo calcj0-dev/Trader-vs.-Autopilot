@@ -286,6 +286,8 @@ button {
 /* ---- S3 プレイ ---- */
 .screen-play {
   padding-bottom: 8px;
+  max-height: calc(100dvh - env(safe-area-inset-top) - 30px);
+  overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -335,7 +337,9 @@ button {
   border-radius: 12px;
   background: var(--surface);
   position: relative;
+  overflow: hidden;
   touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .chart-label {
@@ -373,13 +377,74 @@ button {
   background: var(--down);
 }
 
-.trade-btn:disabled {
+.trade-btn {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out;
+}
+
+.trade-btn.is-off {
   background: var(--line);
   color: var(--text-sub);
 }
 
-.temp-link {
-  align-self: center;
+.trade-btn.is-ordering {
+  transform: scale(0.96);
+  font-size: 20px;
+}
+
+.trade-btn.shake {
+  animation: shake 200ms linear;
+}
+
+@keyframes shake {
+  0%, 100% { translate: 0; }
+  25% { translate: -5px; }
+  75% { translate: 5px; }
+}
+
+.order-notice {
+  min-height: 20px;
+  margin-bottom: 4px;
+  color: var(--text-sub);
+  font-size: 12px;
+  text-align: center;
+  visibility: hidden;
+}
+
+.order-notice.is-visible {
+  visibility: visible;
+}
+
+.asset-state[data-sign="up"] {
+  color: var(--up);
+}
+
+.asset-state[data-sign="down"] {
+  color: var(--down);
+}
+
+.chart-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg);
+  pointer-events: none;
+}
+
+.chart-overlay[hidden] {
+  display: none;
 }
 
 /* ---- S4 結果 ---- */
@@ -420,6 +485,11 @@ button {
   border-radius: 16px;
   background: var(--bg);
   color: var(--text);
+}
+
+.modal:focus,
+.modal:focus-visible {
+  outline: none;
 }
 
 .modal::backdrop {
@@ -487,7 +557,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn:active:not(:disabled) {
+  .btn:active:not(:disabled),
+  .trade-btn.is-ordering {
     transform: none;
   }
 }
