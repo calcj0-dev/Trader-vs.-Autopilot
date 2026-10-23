@@ -1,7 +1,7 @@
 // 文言の取り出し（設計書 10.1）。言語は起動時に1回だけ決める。公開時は常に ja
 
 import { messagesByLocale } from '../data';
-import type { Locale, MessageKey, Messages } from './types';
+import type { Locale, MessageKey, Messages, RandomNewsKey } from './types';
 
 let locale: Locale = 'ja';
 let messages: Messages = messagesByLocale.ja;
@@ -23,6 +23,6 @@ export function format(template: string, vars: Vars = {}): string {
   return template.replace(/\{(\w+)\}/g, (all, name: string) => (name in vars ? String(vars[name]) : all));
 }
 
-export function t(key: MessageKey, vars?: Vars): string {
-  return format(messages[key], vars);
+export function t(key: MessageKey | RandomNewsKey, vars?: Vars): string {
+  return format(messages[key] ?? key, vars);
 }

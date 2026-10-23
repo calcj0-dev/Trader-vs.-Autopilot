@@ -352,8 +352,40 @@ button {
 
 .news {
   min-height: 64px;
-  padding: 8px 4px;
-  font-size: 14px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.news.is-visible {
+  opacity: 1;
+}
+
+.news-source {
+  color: var(--text-sub);
+  font-size: 11px;
+}
+
+.news-headline {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.asset-value.flash {
+  animation: flash 300ms ease-out;
+}
+
+@keyframes flash {
+  0% { color: var(--gold); }
+  100% { color: var(--text); }
 }
 
 .trade-row {

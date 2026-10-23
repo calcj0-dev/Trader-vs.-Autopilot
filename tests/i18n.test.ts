@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { messagesByLocale } from '../src/data';
 import { format, t } from '../src/i18n';
-import { MESSAGE_KEYS } from '../src/i18n/types';
+import { MESSAGE_KEYS, RANDOM_NEWS_KEY } from '../src/i18n/types';
+import newsData from '../src/data/news.json';
 
 describe('文言（i18n）', () => {
   it('すべてのキーに空でない文言がある（ja）', () => {
@@ -9,8 +10,19 @@ describe('文言（i18n）', () => {
   });
 
   it('JSON に、型にないキーがない', () => {
-    const extra = Object.keys(messagesByLocale.ja).filter((k) => !(MESSAGE_KEYS as readonly string[]).includes(k));
+    const extra = Object.keys(messagesByLocale.ja).filter(
+      (k) => !(MESSAGE_KEYS as readonly string[]).includes(k) && !RANDOM_NEWS_KEY.test(k),
+    );
     expect(extra).toEqual([]);
+  });
+
+  it('news.json のランダムのニュースすべてに、媒体名と見出しがある', () => {
+    const ja = messagesByLocale.ja as Record<string, string>;
+    expect(newsData.random).toHaveLength(20);
+    for (const id of newsData.random) {
+      expect(ja[`news.random.${id}.source`], id).toMatch(/\S/);
+      expect(ja[`news.random.${id}.headline`], id).toMatch(/\S/);
+    }
   });
 
   it('差し込み {name} を置き換える。値がない差し込みはそのまま残す', () => {

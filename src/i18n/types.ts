@@ -88,10 +88,26 @@ export const MESSAGE_KEYS = [
   'privacy.p5',
   'privacy.googlePolicy',
   'privacy.optout',
+
+  'news.event.A.source',
+  'news.event.A.headline',
+  'news.event.B.source',
+  'news.event.B.headline',
+  'news.event.C.source',
+  'news.event.C.headline',
+  'news.event.D.source',
+  'news.event.D.headline',
+  'news.event.E.source',
+  'news.event.E.headline',
 ] as const;
 
 export type MessageKey = (typeof MESSAGE_KEYS)[number];
 
-export type Messages = Record<MessageKey, string>;
+/** ランダムのニュースは数を言語ごとに変えられるよう、ID（data/news.json）で引く */
+export type RandomNewsKey = `news.random.${string}.${'source' | 'headline'}`;
+
+export const RANDOM_NEWS_KEY = /^news\.random\.[^.]+\.(source|headline)$/;
+
+export type Messages = Record<MessageKey, string> & { [K in RandomNewsKey]?: string };
 
 export type Locale = 'ja';

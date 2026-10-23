@@ -1,4 +1,5 @@
 import './style.css';
+import { unlockAudio } from './audio';
 import { setLocale } from './i18n';
 import { createApp } from './ui/app';
 import { modals } from './ui/modals';
@@ -9,6 +10,9 @@ import { rulesScreen } from './ui/screens/rules';
 import { titleScreen } from './ui/screens/title';
 
 setLocale('ja');
+// iOS では利用者が触ったときに音を鳴らせるようにする（設計書 8.3）
+document.addEventListener('pointerdown', unlockAudio, { capture: true });
+document.addEventListener('keydown', unlockAudio, { capture: true });
 
 const root = document.querySelector<HTMLElement>('#app');
 if (root) {

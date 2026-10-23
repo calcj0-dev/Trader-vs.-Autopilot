@@ -1,8 +1,10 @@
 // S3 プレイ（設計書 5.7・8章）。カウントダウン → 進行 → 終了の演出 → 結果画面
-// ニュース（#9）・効果音と演出（#10）・初回の吹き出し（#11）はまだ入れていない
+// 初回の吹き出し（#11）はまだ入れていない
 
-import { config, marketParams, monthMs } from '../../data';
+import { sfx, vibrate } from '../../audio';
+import { config, marketParams, monthMs, newsData } from '../../data';
 import { formatMoney, getCurrency } from '../../currency';
+import { buildNewsSchedule, newsAt, type NewsItem } from '../../core/news';
 import type { TradeType } from '../../core/types';
 import { setLastPlay } from '../../game/lastResult';
 import { MonthClock, Ticker } from '../../game/loop';
@@ -54,9 +56,18 @@ export const playScreen: ScreenFactory = (app: App) => {
   let paused = false;
   let phaseElapsed = 0;
 
-  const clock = new MonthClock(monthMs(config), () => {
-    closeMonth(session);
+  const mMs = monthMs(config);
+  const clock = new MonthClock(mMs, () => {
+    if (closeMonth(session)) onSettled();
     return !isFinished(session);
+  });
+
+  // ニュースの予定表：秒の設定を1か月の長さで月に換算する（Q4）
+  const toMonths = (sec: number) => (sec * 1000) / mMs;
+  const news = buildNewsSchedule(session.seed, session.market.events, newsData, {
+    gameMonths: N,
+    intervalMonths: { min: toMonths(config.news.intervalSec.min), max: toMonths(config.news.intervalSec.max) },
+    showMonths: toMonths(config.news.showSec),
   });
 
   // ---- 画面の部品 ----
@@ -68,6 +79,9 @@ export const playScreen: ScreenFactory = (app: App) => {
   const canvas = h('canvas', { className: 'chart-canvas' });
   const overlay = h('div', { className: 'chart-overlay', attrs: { 'aria-live': 'assertive' } });
   const notice = h('p', { className: 'order-notice', text: t('play.orderedThisMonth') });
+  const newsSource = h('span', { className: 'news-source' });
+  const newsHeadline = h('span', { className: 'news-headline' });
+  const newsBox = h('div', { className: 'news', attrs: { 'aria-live': 'polite' } }, [newsSource, newsHeadline]);
 
   const tradeButton = (type: TradeType) => {
     const el = h('button', {
@@ -98,7 +112,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       assetState,
     ]),
     h('div', { className: 'chart-area' }, [canvas, h('span', { className: 'chart-label', text: t('play.indexName') }), overlay]),
-    h('div', { className: 'news', attrs: { 'aria-live': 'polite' } }),
+    newsBox,
     notice,
     h('div', { className: 'trade-row' }, [buy, sell]),
   ]);
@@ -118,6 +132,7 @@ export const playScreen: ScreenFactory = (app: App) => {
   function onPress(type: TradeType, btn: HTMLElement): void {
     if (!interactive()) return;
     if (placeOrder(session, type)) {
+      sfx.click();
       render();
       return;
     }
@@ -126,6 +141,15 @@ export const playScreen: ScreenFactory = (app: App) => {
     btn.classList.remove('shake');
     void btn.offsetWidth;
     btn.classList.add('shake');
+  }
+
+  /** 約定：資産額が一瞬光る・ポン・振動 */
+  function onSettled(): void {
+    sfx.settle();
+    vibrate(10);
+    assetValue.classList.remove('flash');
+    void assetValue.offsetWidth;
+    assetValue.classList.add('flash');
   }
 
   function pause(kind: Extract<ModalName, 'pause' | 'portrait'>): void {
@@ -165,6 +189,7 @@ export const playScreen: ScreenFactory = (app: App) => {
         if (isFinished(session)) {
           phase = 'ending';
           phaseElapsed = 0;
+          sfx.ending();
         }
       } else if (phase === 'ending' && phaseElapsed >= config.timing.endingMs) {
         setLastPlay({ session, result: sessionResult(session, currency.minorUnit) });
@@ -241,7 +266,20 @@ export const playScreen: ScreenFactory = (app: App) => {
       btn.setAttribute('aria-disabled', String(!(on && canOrder(session, type))));
     }
     notice.classList.toggle('is-visible', session.pending !== null);
+
+    // ニュース（チャートの下に1本。切り替えはフェード）
+    const item = progress === null ? null : newsAt(news, session.month + progress);
+    if (item !== shownNews) {
+      shownNews = item;
+      if (item) {
+        const base = item.kind === 'random' ? (`news.random.${item.id}` as const) : (`news.event.${item.id}` as const);
+        newsSource.textContent = t(`${base}.source` as Parameters<typeof t>[0]);
+        newsHeadline.textContent = t(`${base}.headline` as Parameters<typeof t>[0]);
+      }
+      newsBox.classList.toggle('is-visible', item !== null);
+    }
   }
+  let shownNews: NewsItem | null = null;
 
   // ---- 一時停止になる場面（自動では再開しない） ----
   const onVisibility = () => {
