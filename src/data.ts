@@ -2,7 +2,11 @@
 // satisfies により、項目の不足・型の違いはビルド時にエラーになる（T-20）
 
 import type { MarketParams, Range, ScenarioData } from './core/types';
+import type { CurrencyConfig } from './currency/types';
+import type { Locale, Messages } from './i18n/types';
 import configJson from './data/config.json';
+import jpyJson from './data/currency/jpy.json';
+import jaJson from './data/i18n/ja.json';
 import scenariosJson from './data/scenarios.json';
 
 export type GameConfig = {
@@ -15,11 +19,17 @@ export type GameConfig = {
   timing: { countdownStepMs: number; hintMs: number; resumeMs: number; endingMs: number; resultLineMs: number };
   news: { intervalSec: Range; showSec: number };
   colors: { up: string; down: string; gold: string; tsumitate: string; lump: string };
-  links: { tameru: string; follow: string; xIntent: string };
+  links: { tameru: string; follow: string; xIntent: string; googlePrivacy: string; gaOptout: string };
 };
 
 export const config = configJson satisfies GameConfig;
 export const scenarioData = scenariosJson satisfies ScenarioData;
+
+/** 言語ごとの文言。言語を足すときは JSON を作ってここに1行足す */
+export const messagesByLocale = { ja: jaJson } satisfies Record<Locale, Messages>;
+
+/** 通貨ごとの設定。通貨を足すときは JSON を作ってここに1行足す */
+export const currencies = { JPY: jpyJson } satisfies Record<string, CurrencyConfig>;
 
 /** 1か月の長さ（ミリ秒）＝全体の秒数×1000÷期間の月数 */
 export function monthMs(c: Pick<GameConfig, 'gameSeconds' | 'gameMonths'>): number {

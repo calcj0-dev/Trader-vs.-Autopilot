@@ -1,0 +1,10 @@
+{
+  "code": "JPY",
+  "initialCash": 1000000,
+  "minorUnit": 1,
+  "formats": {
+    "asset": { "divisor": 10000, "decimals": 1, "prefix": "", "suffix": "万円", "grouping": false },
+    "whole": { "divisor": 10000, "decimals": 0, "prefix": "", "suffix": "万円", "grouping": false },
+    "plain": { "divisor": 1, "decimals": 0, "prefix": "", "suffix": "円", "grouping": true }
+  }
+}

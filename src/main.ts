@@ -1,44 +1,31 @@
-import ja from './data/i18n/ja.json';
-import { APP_VERSION, formatVersion } from './version';
+import './style.css';
+import { setLocale } from './i18n';
+import { createApp } from './ui/app';
+import { modals } from './ui/modals';
+import { disclaimer } from './ui/parts';
+import { playScreen } from './ui/screens/play';
+import { resultScreen } from './ui/screens/result';
+import { rulesScreen } from './ui/screens/rules';
+import { titleScreen } from './ui/screens/title';
 
-// #1 準備：タイトル画面の仮の表示（画面の切り替えは #5、文言の仕組み t() は #5b で作る）
-function renderPlaceholder(root: HTMLElement): void {
-  root.innerHTML = '';
-
-  const screen = document.createElement('main');
-  screen.className = 'screen';
-
-  const topBar = document.createElement('div');
-  topBar.className = 'top-bar';
-  const version = document.createElement('span');
-  version.className = 'version';
-  version.textContent = formatVersion(APP_VERSION);
-  topBar.append(version);
-
-  const title = document.createElement('h1');
-  title.className = 'title';
-  title.textContent = ja['title.main'];
-
-  const sub = document.createElement('p');
-  sub.className = 'subtitle';
-  sub.textContent = ja['title.sub'];
-
-  const lead = document.createElement('p');
-  lead.className = 'lead';
-  lead.textContent = ja['title.lead'];
-
-  const preparing = document.createElement('p');
-  preparing.className = 'preparing';
-  preparing.textContent = ja['common.preparing'];
-
-  screen.append(topBar, title, sub, lead, preparing);
-
-  const disclaimer = document.createElement('footer');
-  disclaimer.className = 'disclaimer';
-  disclaimer.textContent = ja['common.disclaimer'];
-
-  root.append(screen, disclaimer);
-}
+setLocale('ja');
 
 const root = document.querySelector<HTMLElement>('#app');
-if (root) renderPlaceholder(root);
+if (root) {
+  const app = createApp(
+    root,
+    { title: titleScreen, rules: rulesScreen, play: playScreen, result: resultScreen },
+    modals,
+    disclaimer(),
+  );
+  app.go('title');
+
+  // 開発用：?screen=play&modal=pause のように、画面と重ね表示を直接開く（公開版では無視する）
+  if (import.meta.env.DEV) {
+    const q = new URLSearchParams(location.search);
+    const screen = q.get('screen');
+    const modal = q.get('modal');
+    if (screen === 'title' || screen === 'rules' || screen === 'play' || screen === 'result') app.go(screen);
+    if (modal && modal in modals) app.openModal(modal as keyof typeof modals);
+  }
+}
