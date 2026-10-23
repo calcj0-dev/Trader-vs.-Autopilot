@@ -1,0 +1,31 @@
+{
+  "gameMonths": 240,
+  "gameSeconds": 80,
+  "preMonths": 24,
+  "visibleCandles": 40,
+  "visibleCandlesNarrow": 32,
+  "narrowWidthPx": 360,
+  "timing": {
+    "countdownStepMs": 600,
+    "hintMs": 2000,
+    "resumeMs": 600,
+    "endingMs": 1000,
+    "resultLineMs": 1200
+  },
+  "news": {
+    "intervalSec": [6, 10],
+    "showSec": 4
+  },
+  "colors": {
+    "up": "#D93A3F",
+    "down": "#2F6BE0",
+    "gold": "#C98A12",
+    "tsumitate": "#1E9E6A",
+    "lump": "#8A93A3"
+  },
+  "links": {
+    "tameru": "https://tameru-lovat.vercel.app/?utm_source=bakage&utm_medium=game&utm_campaign=baka016",
+    "follow": "https://x.com/shooojp19",
+    "xIntent": "https://x.com/intent/post"
+  }
+}
