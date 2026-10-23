@@ -13,7 +13,7 @@
     "resultLineMs": 1200
   },
   "news": {
-    "intervalSec": [6, 10],
+    "intervalSec": { "min": 6, "max": 10 },
     "showSec": 4
   },
   "colors": {

@@ -1,0 +1,59 @@
+{
+  "startPrice": 10000,
+  "subSteps": 20,
+  "pre": { "mu": 0.05, "sigma": 0.15 },
+  "scenarios": {
+    "steady": {
+      "weight": 35,
+      "mu": 0.065,
+      "sigma": 0.14,
+      "correctionsPerYear": 0.35
+    },
+    "crash": {
+      "weight": 35,
+      "mu": 0.065,
+      "sigma": 0.14,
+      "correctionsPerYear": 0.3,
+      "crashStart": { "min": 36, "max": 168 },
+      "crashLength": { "min": 5, "max": 9 },
+      "crashMu": 0,
+      "crashSigma": 0.22,
+      "crashTotal": 0.58,
+      "bounce": 1.08,
+      "rebound": 1.22,
+      "reboundMonths": 3,
+      "reboundSigma": 0.2,
+      "recoveryMonths": { "min": 18, "max": 36 },
+      "recoveryRatio": 0.9,
+      "recoverySigma": 0.16,
+      "newsDelay": 2,
+      "gloomBeforeBottom": { "min": 1, "max": 3 }
+    },
+    "volatile": {
+      "weight": 22,
+      "upMu": 0.27,
+      "downMu": -0.17,
+      "sigma": 0.24,
+      "segment": { "min": 3, "max": 15 },
+      "firstUpProb": 0.55
+    },
+    "decline": {
+      "weight": 8,
+      "mu": -0.03,
+      "sigma": 0.18,
+      "rallyStart": { "min": 60, "max": 150 },
+      "rallyMonths": 12,
+      "rallyMu": 0.15
+    }
+  },
+  "correction": {
+    "startMonth": 6,
+    "minGap": 6,
+    "depthMin": 0.12,
+    "depthSpan": 0.1,
+    "down": { "min": 1, "max": 3 },
+    "up": { "min": 2, "max": 6 },
+    "recoverRatio": 0.95,
+    "crashMargin": 6
+  }
+}
