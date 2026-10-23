@@ -36,22 +36,26 @@ export class MonthClock {
 export class Ticker {
   private raf = 0;
   private last = 0;
+  private running = false;
 
   constructor(private readonly onFrame: (dt: number) => void) {}
 
   start(): void {
-    if (this.raf) return;
+    if (this.running) return;
+    this.running = true;
     this.last = performance.now();
     const tick = (now: number) => {
       const dt = Math.min(now - this.last, MAX_FRAME_MS);
       this.last = now;
       this.onFrame(dt);
-      this.raf = requestAnimationFrame(tick);
+      // onFrame の中で stop() された（画面が切り替わった）ら、次のコマを予約しない
+      if (this.running) this.raf = requestAnimationFrame(tick);
     };
     this.raf = requestAnimationFrame(tick);
   }
 
   stop(): void {
+    this.running = false;
     cancelAnimationFrame(this.raf);
     this.raf = 0;
   }

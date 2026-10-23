@@ -197,6 +197,8 @@ export const playScreen: ScreenFactory = (app: App) => {
           sfx.ending();
         }
       } else if (phase === 'ending' && phaseElapsed >= config.timing.endingMs) {
+        // 結果画面へは1回だけ移る
+        ticker.stop();
         setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData) });
         app.go('result');
         return;
