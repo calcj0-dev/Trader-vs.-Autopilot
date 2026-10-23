@@ -1,5 +1,5 @@
 // S4 結果（設計書 5.8）。勝敗・称号・3本線・3者の金額・種明かし・注意書き・もう一回
-// シェア・結果画像・TAMERU・フォロー（#13・#14）は M7 で入れる
+// シェア・結果画像・TAMERU・フォロー（設計書 5.8.2・7.12）
 
 import { sfx } from '../../audio';
 import { config, marketParams, titleData } from '../../data';
@@ -9,8 +9,11 @@ import { getLastPlay, setLastPlay, type LastPlay } from '../../game/lastResult';
 import { closeMonth, isFinished, newSession, placeOrder, sessionResult } from '../../game/session';
 import { t } from '../../i18n';
 import type { ScreenFactory } from '../app';
-import { drawCompare, type CompareData } from '../chart/compare';
-import { button, h, linkButton } from '../dom';
+import { compareData, compareStyle, drawCompare } from '../chart/compare';
+import { button, externalLink, h, linkButton } from '../dom';
+import { postText } from '../../share/postText';
+import { resultImage } from '../../share/resultImage';
+import { canShareImage, openXIntent, shareWithImage } from '../../share/share';
 import { gameVars, soundButton } from '../parts';
 import { ensureHistoryEntry } from './play';
 
@@ -31,26 +34,6 @@ function demoPlay(): LastPlay {
     closeMonth(s);
   }
   return { session: s, result: sessionResult(s, c.minorUnit, titleData) };
-}
-
-export const compareStyle = {
-  you: config.colors.up,
-  tsumitate: config.colors.tsumitate,
-  lump: config.colors.lump,
-  up: config.colors.up,
-  down: config.colors.down,
-  grid: '#e3e7ed',
-};
-
-export function compareData(p: LastPlay): CompareData {
-  const { session, result } = p;
-  return {
-    you: result.history,
-    tsumitate: result.tsumitate.history,
-    lump: result.lump.history,
-    trades: result.trades,
-    candles: session.market.candles.slice(session.preMonths),
-  };
 }
 
 const OUTCOME_SOUND: Record<Outcome, () => void> = {
@@ -77,6 +60,7 @@ export const resultScreen: ScreenFactory = (app) => {
   const o = result.judgement.outcome;
 
   const sound = soundButton();
+  const thumb = h('img', { className: 'image-thumb-img', attrs: { alt: '' } });
   const canvas = h('canvas', { className: 'compare-canvas' });
   const effects = h('div', { className: 'result-effects', attrs: { 'aria-hidden': 'true' } });
 
@@ -96,7 +80,7 @@ export const resultScreen: ScreenFactory = (app) => {
     row(t('result.lump'), result.lump.final, round(result.final) > round(result.lump.final), 'lump'),
   ]);
   const actionsEl = h('div', { className: 'main-actions reveal' }, [
-    button(t('result.share'), () => {}, 'btn btn-secondary'),
+    button(t('result.share'), () => onShare(), 'btn btn-secondary'),
     button(t('result.retry'), () => app.go('play'), 'btn btn-primary'),
   ]);
 
@@ -110,12 +94,38 @@ export const resultScreen: ScreenFactory = (app) => {
       h('p', { text: t('result.summary', { trades: result.trades.length, reveal: t(`scenario.${result.scenario}.reveal`) }) }),
       h('p', { className: 'note', text: t('result.caution') }),
     ]),
+    h('button', { className: 'image-thumb', attrs: { type: 'button', 'aria-label': t('result.imagePreview') }, on: { click: () => app.openModal('image') } }, [
+      h('span', { className: 'image-thumb-label', text: t('result.imagePreview') }),
+      thumb,
+    ]),
+    h('div', { className: 'tameru-box' }, [
+      h('p', { className: 'tameru-heading', text: t('result.tameruHeading') }),
+      h('p', { className: 'tameru-body', text: t('result.tameruBody') }),
+      h('a', { className: 'btn btn-primary tameru-btn', text: t('result.tameruButton'), attrs: { href: config.links.tameru, target: '_blank', rel: 'noopener' } }),
+    ]),
+    externalLink(t('result.follow'), config.links.follow),
     h('nav', { className: 'link-row' }, [
       linkButton(t('result.params'), () => app.openModal('params')),
       linkButton(t('result.settings'), () => app.openModal('settings')),
       linkButton(t('result.privacy'), () => app.openModal('privacy')),
     ]),
   ]);
+
+  // ---- 結果画像とシェア（画像は先に作っておき、押したときにすぐ共有できるようにする） ----
+  let imageBlob: Blob | null = null;
+  let thumbUrl = '';
+  void resultImage(play).then((b) => {
+    imageBlob = b;
+    if (b) {
+      thumbUrl = URL.createObjectURL(b);
+      thumb.src = thumbUrl;
+    }
+  });
+  const text = postText(result);
+  function onShare(): void {
+    if (imageBlob && canShareImage(imageBlob)) void shareWithImage(text, imageBlob);
+    else openXIntent(text);
+  }
 
   // ---- 出し方（設計書 5.8.1）：3本線を1.2秒で描く → 勝敗と音 → 残りを0.2秒ずつ ----
   const data = compareData(play);
@@ -194,6 +204,7 @@ export const resultScreen: ScreenFactory = (app) => {
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
       sound.dispose();
+      if (thumbUrl) URL.revokeObjectURL(thumbUrl);
       window.removeEventListener('popstate', onPopState);
       window.removeEventListener('resize', onResize);
     },

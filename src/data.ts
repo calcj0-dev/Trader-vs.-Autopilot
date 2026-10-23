@@ -23,7 +23,7 @@ export type GameConfig = {
   timing: { countdownStepMs: number; hintMs: number; resumeMs: number; endingMs: number; resultLineMs: number };
   news: { intervalSec: Range; showSec: number };
   colors: { up: string; down: string; gold: string; tsumitate: string; lump: string };
-  links: { tameru: string; follow: string; xIntent: string; googlePrivacy: string; gaOptout: string };
+  links: { tameru: string; follow: string; xIntent: string; shareQuery: string; googlePrivacy: string; gaOptout: string };
 };
 
 export const config = configJson satisfies GameConfig;
@@ -44,4 +44,17 @@ export function monthMs(c: Pick<GameConfig, 'gameSeconds' | 'gameMonths'>): numb
 
 export function marketParams(c: Pick<GameConfig, 'gameMonths' | 'preMonths'> = config): MarketParams {
   return { gameMonths: c.gameMonths, preMonths: c.preMonths, data: scenarioData };
+}
+
+/** 作品のURL（環境変数 VITE_SITE_URL。設計書 6.3）。未設定なら今のページのURL */
+export function siteUrl(): string {
+  const v = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim();
+  if (v) return v;
+  return typeof location === 'undefined' ? '' : location.origin + location.pathname;
+}
+
+/** シェアするURL（相場番号は付けない） */
+export function shareUrl(): string {
+  const base = siteUrl();
+  return `${base}${base.includes('?') ? '&' : '?'}${config.links.shareQuery}`;
 }

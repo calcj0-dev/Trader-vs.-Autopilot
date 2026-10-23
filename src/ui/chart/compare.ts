@@ -1,6 +1,8 @@
 // 結果の3本線（設計書 5.8）：あなた（赤・太、売買の印）、積立（緑）、一括放置（灰・点線）。背景にローソク足を薄く
 
 import type { Candle, Trade } from '../../core/types';
+import { config } from '../../data';
+import type { LastPlay } from '../../game/lastResult';
 
 export type CompareData = {
   you: number[];
@@ -115,4 +117,24 @@ export function drawCompareOn(
     ctx.closePath();
     ctx.fill();
   }
+}
+
+export const compareStyle = {
+  you: config.colors.up,
+  tsumitate: config.colors.tsumitate,
+  lump: config.colors.lump,
+  up: config.colors.up,
+  down: config.colors.down,
+  grid: '#e3e7ed',
+};
+
+export function compareData(p: LastPlay): CompareData {
+  const { session, result } = p;
+  return {
+    you: result.history,
+    tsumitate: result.tsumitate.history,
+    lump: result.lump.history,
+    trades: result.trades,
+    candles: session.market.candles.slice(session.preMonths),
+  };
 }

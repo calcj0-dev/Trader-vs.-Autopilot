@@ -1,6 +1,10 @@
 // 重ね表示 M1〜M6（設計書 5.9）。#5 では器と、いま作れる中身（設定・設定値・プライバシー）まで
 
 import { config } from '../data';
+import { getLastPlay } from '../game/lastResult';
+import { postText } from '../share/postText';
+import { resultImage } from '../share/resultImage';
+import { canShareImage, saveImage, shareWithImage } from '../share/share';
 import { t } from '../i18n';
 import { settings, type ChartMode } from '../settings';
 import type { ModalFactory, ModalName } from './app';
@@ -97,10 +101,28 @@ const params: ModalFactory = (app) => {
   );
 };
 
-const image: ModalFactory = (app) =>
-  panel(t('image.heading'), [h('p', { className: 'note', text: t('common.preparing') })], [
-    button(t('common.close'), () => app.closeModal()),
-  ]);
+/** M4 結果画像のプレビュー：拡大表示、画像を付けてシェア（Web Share が使える端末だけ）、保存 */
+const image: ModalFactory = (app) => {
+  const play = getLastPlay();
+  const img = h('img', { className: 'image-preview', attrs: { alt: t('image.alt') } });
+  const shareBtn = button(t('image.shareWithImage'), () => blob && void shareWithImage(play ? postText(play.result) : '', blob), 'btn btn-primary');
+  const saveBtn = button(t('image.save'), () => blob && saveImage(blob), 'link');
+  shareBtn.hidden = true;
+  saveBtn.disabled = true;
+  let blob: Blob | null = null;
+  if (play) {
+    void resultImage(play).then((b) => {
+      blob = b;
+      if (!b) return;
+      const url = URL.createObjectURL(b);
+      img.src = url;
+      img.addEventListener('load', () => setTimeout(() => URL.revokeObjectURL(url), 1000), { once: true });
+      shareBtn.hidden = !canShareImage(b);
+      saveBtn.disabled = false;
+    });
+  }
+  return panel(t('image.heading'), [img], [shareBtn, saveBtn, button(t('common.close'), () => app.closeModal())]);
+};
 
 const portrait: ModalFactory = () =>
   h('div', { className: 'modal-panel portrait' }, [h('p', { className: 'portrait-message', text: t('portrait.message') })]);
