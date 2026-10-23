@@ -28,6 +28,13 @@ export const settings = {
   set rulesSeen(v: boolean) {
     save('rulesSeen', v ? '1' : '0');
   },
+  /** 「右端のローソク足が今月です」の吹き出しを出したか */
+  get hintSeen(): boolean {
+    return load('hintSeen', '0') === '1';
+  },
+  set hintSeen(v: boolean) {
+    save('hintSeen', v ? '1' : '0');
+  },
 };
 
 /** 設定が変わったら呼ばれる（音のボタンの見た目を合わせるため）。戻り値で解除 */

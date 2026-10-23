@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { config, marketParams, monthMs } from '../src/data';
+import { config, marketParams, monthMs, titleData } from '../src/data';
 import { MAX_FRAME_MS, MonthClock } from '../src/game/loop';
 import { canOrder, closeMonth, isFinished, newSession, placeOrder, sessionResult } from '../src/game/session';
 import { simulatePlayer } from '../src/core/portfolio';
@@ -75,7 +75,7 @@ describe('1プレイの進行', () => {
       if (o) placeOrder(s, o);
       closeMonth(s);
     }
-    const r = sessionResult(s, 1);
+    const r = sessionResult(s, 1, titleData);
     expect(Math.round(r.final)).toBe(1_685_498);
     expect(r.judgement.outcome).toBe('big_win');
     expect(r.final).toBe(simulatePlayer(s.closes, [...orders].map(([month, type]) => ({ month, type })), INITIAL_CASH).final);

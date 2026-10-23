@@ -1,0 +1,16 @@
+{
+  "nearBottom": { "windowMonths": 24, "ratio": 1.03 },
+  "rules": [
+    { "id": "cash_lover", "when": { "trades": { "max": 0 } } },
+    { "id": "one_button", "when": { "lumpHolder": true } },
+    { "id": "from_future", "when": { "outcome": ["big_win"], "trades": { "max": 10 } } },
+    { "id": "quit_job", "when": { "outcome": ["big_win"] } },
+    { "id": "beats_tsumitate", "when": { "outcome": ["win"], "trades": { "max": 10 } } },
+    { "id": "tired_fingers", "when": { "outcome": ["win"] } },
+    { "id": "practically_tsumitate", "when": { "outcome": ["draw"] } },
+    { "id": "bottom_sommelier", "when": { "outcome": ["lose"], "nearBottom": true } },
+    { "id": "chart_talker", "when": { "outcome": ["lose"], "trades": { "min": 30 } } },
+    { "id": "blame_market", "when": { "outcome": ["lose"], "scenario": ["decline"] } },
+    { "id": "proved_tsumitate", "when": {} }
+  ]
+}

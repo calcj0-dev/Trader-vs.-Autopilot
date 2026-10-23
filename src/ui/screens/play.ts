@@ -1,8 +1,7 @@
 // S3 プレイ（設計書 5.7・8章）。カウントダウン → 進行 → 終了の演出 → 結果画面
-// 初回の吹き出し（#11）はまだ入れていない
 
 import { sfx, vibrate } from '../../audio';
-import { config, marketParams, monthMs, newsData } from '../../data';
+import { config, marketParams, monthMs, newsData, titleData } from '../../data';
 import { formatMoney, getCurrency } from '../../currency';
 import { buildNewsSchedule, newsAt, type NewsItem } from '../../core/news';
 import type { TradeType } from '../../core/types';
@@ -16,7 +15,7 @@ import { CandleChart, partialCandle, type ChartMark } from '../chart/candles';
 import { h } from '../dom';
 import { gameVars, pauseButton, soundButton } from '../parts';
 
-type Phase = 'countdown' | 'playing' | 'resuming' | 'ending';
+type Phase = 'hint' | 'countdown' | 'playing' | 'resuming' | 'ending';
 
 /** 開発用ビルドだけ ?seed= で相場番号を指定できる（設計書 4.2） */
 function pickSeed(): number {
@@ -52,7 +51,8 @@ export const playScreen: ScreenFactory = (app: App) => {
   const pre = session.preMonths;
   const stepMs = config.timing.countdownStepMs;
 
-  let phase: Phase = 'countdown';
+  // 初回だけ、カウントダウンの前に「右端のローソク足が今月です」を2秒出す（設計書 5.7）
+  let phase: Phase = settings.hintSeen ? 'countdown' : 'hint';
   let paused = false;
   let phaseElapsed = 0;
 
@@ -79,6 +79,7 @@ export const playScreen: ScreenFactory = (app: App) => {
   const canvas = h('canvas', { className: 'chart-canvas' });
   const overlay = h('div', { className: 'chart-overlay', attrs: { 'aria-live': 'assertive' } });
   const notice = h('p', { className: 'order-notice', text: t('play.orderedThisMonth') });
+  const hint = h('p', { className: 'hint-bubble', text: t('play.hint') });
   const newsSource = h('span', { className: 'news-source' });
   const newsHeadline = h('span', { className: 'news-headline' });
   const newsBox = h('div', { className: 'news', attrs: { 'aria-live': 'polite' } }, [newsSource, newsHeadline]);
@@ -111,7 +112,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       assetValue,
       assetState,
     ]),
-    h('div', { className: 'chart-area' }, [canvas, h('span', { className: 'chart-label', text: t('play.indexName') }), overlay]),
+    h('div', { className: 'chart-area' }, [canvas, h('span', { className: 'chart-label', text: t('play.indexName') }), overlay, hint]),
     newsBox,
     notice,
     h('div', { className: 'trade-row' }, [buy, sell]),
@@ -178,7 +179,11 @@ export const playScreen: ScreenFactory = (app: App) => {
   function frame(dt: number): void {
     if (!paused) {
       phaseElapsed += dt;
-      if (phase === 'countdown' && phaseElapsed >= stepMs * 4) {
+      if (phase === 'hint' && phaseElapsed >= config.timing.hintMs) {
+        settings.hintSeen = true;
+        phase = 'countdown';
+        phaseElapsed = 0;
+      } else if (phase === 'countdown' && phaseElapsed >= stepMs * 4) {
         phase = 'playing';
         phaseElapsed = 0;
       } else if (phase === 'resuming' && phaseElapsed >= config.timing.resumeMs) {
@@ -192,7 +197,7 @@ export const playScreen: ScreenFactory = (app: App) => {
           sfx.ending();
         }
       } else if (phase === 'ending' && phaseElapsed >= config.timing.endingMs) {
-        setLastPlay({ session, result: sessionResult(session, currency.minorUnit) });
+        setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData) });
         app.go('result');
         return;
       }
@@ -204,7 +209,7 @@ export const playScreen: ScreenFactory = (app: App) => {
   function render(): void {
     const m = Math.min(session.month, N - 1);
     const current = pre + m;
-    const progress = phase === 'countdown' ? null : isFinished(session) ? 1 : clock.progress;
+    const progress = phase === 'countdown' || phase === 'hint' ? null : isFinished(session) ? 1 : clock.progress;
 
     // チャート
     const marks: ChartMark[] = session.trades.map((tr) => ({ index: pre + tr.month, type: tr.type }));
@@ -252,6 +257,7 @@ export const playScreen: ScreenFactory = (app: App) => {
     else if (phase === 'ending') text = t('play.ended', gameVars());
     if (overlay.textContent !== text) overlay.textContent = text;
     overlay.hidden = text === '';
+    hint.hidden = phase !== 'hint';
 
     // ボタン
     const on = interactive();

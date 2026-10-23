@@ -1,6 +1,7 @@
 // JSON のデータを読み込み、型を付けて渡す窓口（設計書 6.6）。
 // satisfies により、項目の不足・型の違いはビルド時にエラーになる（T-20）
 
+import type { TitleData } from './core/judge';
 import type { NewsData } from './core/news';
 import type { MarketParams, Range, ScenarioData } from './core/types';
 import type { CurrencyConfig } from './currency/types';
@@ -10,6 +11,7 @@ import jpyJson from './data/currency/jpy.json';
 import jaJson from './data/i18n/ja.json';
 import newsJson from './data/news.json';
 import scenariosJson from './data/scenarios.json';
+import titlesJson from './data/titles.json';
 
 export type GameConfig = {
   gameMonths: number;
@@ -27,6 +29,7 @@ export type GameConfig = {
 export const config = configJson satisfies GameConfig;
 export const scenarioData = scenariosJson satisfies ScenarioData;
 export const newsData = newsJson satisfies NewsData;
+export const titleData = titlesJson satisfies TitleData;
 
 /** 言語ごとの文言。言語を足すときは JSON を作ってここに1行足す */
 export const messagesByLocale = { ja: jaJson } satisfies Record<Locale, Messages>;

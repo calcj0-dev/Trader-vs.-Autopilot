@@ -1,6 +1,6 @@
 // 1プレイの状態（設計書 7.8）。計算は core/ の関数を呼ぶだけ
 
-import { judge, type Judgement } from '../core/judge';
+import { judge, pickTitle, type Judgement, type TitleData, type TitleId } from '../core/judge';
 import { gameCloses, generateMarket } from '../core/market';
 import { canBuy, canSell, createPortfolio, settle, simulateLumpSum, simulateTsumitate, valueAt, type Portfolio } from '../core/portfolio';
 import type { Market, MarketParams, Trade, TradeType } from '../core/types';
@@ -72,20 +72,23 @@ export type SessionResult = {
   history: number[];
   trades: Trade[];
   judgement: Judgement;
+  title: TitleId;
   scenario: Market['scenario'];
 };
 
-export function sessionResult(s: Session, minorUnit: number): SessionResult {
+export function sessionResult(s: Session, minorUnit: number, titles: TitleData): SessionResult {
   const tsumitate = simulateTsumitate(s.closes, s.initialCash);
   const lump = simulateLumpSum(s.closes, s.initialCash);
   const final = s.history[s.history.length - 1] ?? s.initialCash;
+  const judgement = judge(final, tsumitate.final, lump.final, s.trades, minorUnit);
   return {
     final,
     tsumitate,
     lump,
     history: s.history,
     trades: s.trades,
-    judgement: judge(final, tsumitate.final, lump.final, s.trades, minorUnit),
+    judgement,
+    title: pickTitle(titles, s.closes, s.market.scenario, s.trades, judgement),
     scenario: s.market.scenario,
   };
 }

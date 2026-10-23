@@ -488,13 +488,222 @@ button {
   justify-content: space-between;
 }
 
-.result-placeholder {
-  min-height: 220px;
-  display: grid;
-  place-items: center;
+.result-head {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.outcome {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.outcome-big_win {
+  color: var(--gold);
+}
+
+.outcome-win {
+  color: var(--up);
+}
+
+.outcome-draw,
+.outcome-lose {
+  color: var(--text-sub);
+}
+
+.lump-holder {
+  font-size: 14px;
+}
+
+.honor {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.compare-box {
+  height: 220px;
   border-radius: 12px;
   background: var(--surface);
-  color: var(--text-sub);
+  overflow: hidden;
+}
+
+.compare-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.finals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.final-row {
+  display: grid;
+  grid-template-columns: 6em 1fr 1.5em;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.final-row::before {
+  content: "";
+  display: none;
+}
+
+.final-label {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.final-label::before {
+  content: "";
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.final-row.you .final-label::before {
+  background: var(--up);
+  height: 4px;
+}
+
+.final-row.tsumitate .final-label::before {
+  background: var(--tsumitate);
+}
+
+.final-row.lump .final-label::before {
+  background: repeating-linear-gradient(90deg, var(--lump) 0 4px, transparent 4px 7px);
+}
+
+.final-amount {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.final-row.you .final-amount {
+  font-size: 24px;
+}
+
+.final-check {
+  color: var(--tsumitate);
+  font-weight: 800;
+}
+
+.result-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 250ms ease, transform 250ms ease;
+}
+
+.reveal:not(.is-shown) {
+  pointer-events: none;
+}
+
+.reveal.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+.outcome-lose.is-shown {
+  animation: sink 500ms ease-out;
+}
+
+@keyframes sink {
+  0% { transform: translateY(-6px); }
+  60% { transform: translateY(6px); }
+  100% { transform: none; }
+}
+
+.result-effects {
+  position: absolute;
+  inset: -40px -24px auto;
+  height: 360px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti 1.6s ease-in forwards;
+}
+
+@keyframes confetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(var(--drift), 340px) rotate(540deg); }
+}
+
+.star {
+  position: absolute;
+  left: 50%;
+  top: 70px;
+  width: 16px;
+  height: 16px;
+  margin: -8px;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  opacity: 0;
+  animation: star 900ms ease-out forwards;
+}
+
+@keyframes star {
+  0% { opacity: 1; transform: rotate(var(--angle)) translateY(0) scale(0.6); }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateY(-90px) scale(1.2); }
+}
+
+.hint-bubble {
+  position: absolute;
+  right: 8px;
+  bottom: 50%;
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.hint-bubble::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: -7px;
+  border: 7px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--text);
+}
+
+.hint-bubble[hidden] {
+  display: none;
 }
 
 .main-actions {
@@ -592,5 +801,14 @@ button {
   .btn:active:not(:disabled),
   .trade-btn.is-ordering {
     transform: none;
+  }
+
+  .reveal {
+    transition: none;
+    transform: none;
+  }
+
+  .outcome-lose.is-shown {
+    animation: none;
   }
 }
