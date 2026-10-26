@@ -9,7 +9,7 @@
   --down: #2f6be0;
   --gold: #c98a12;
   --tsumitate: #1e9e6a;
-  --lump: #8a93a3;
+  --principal: #8a93a3;
   --app-width: 430px;
   --gutter: 24px;
   color-scheme: light;
@@ -447,11 +447,11 @@ button {
   visibility: visible;
 }
 
-.asset-state[data-sign="up"] {
+.asset-stock[data-sign="up"] {
   color: var(--up);
 }
 
-.asset-state[data-sign="down"] {
+.asset-stock[data-sign="down"] {
   color: var(--down);
 }
 
@@ -503,7 +503,8 @@ button {
   line-height: 1.2;
 }
 
-.outcome-big_win {
+.outcome-historic,
+.outcome-rout {
   color: var(--gold);
 }
 
@@ -516,8 +517,9 @@ button {
   color: var(--text-sub);
 }
 
-.lump-holder {
-  font-size: 14px;
+.outcome-diff {
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .honor {
@@ -550,7 +552,7 @@ button {
 
 .final-row {
   display: grid;
-  grid-template-columns: 6em 1fr 1.5em;
+  grid-template-columns: 6em 1fr;
   align-items: baseline;
   gap: 8px;
 }
@@ -584,8 +586,8 @@ button {
   background: var(--tsumitate);
 }
 
-.final-row.lump .final-label::before {
-  background: repeating-linear-gradient(90deg, var(--lump) 0 4px, transparent 4px 7px);
+.final-row.principal .final-label::before {
+  background: repeating-linear-gradient(90deg, var(--principal) 0 4px, transparent 4px 7px);
 }
 
 .final-amount {
@@ -596,11 +598,6 @@ button {
 
 .final-row.you .final-amount {
   font-size: 24px;
-}
-
-.final-check {
-  color: var(--tsumitate);
-  font-weight: 800;
 }
 
 .result-detail {

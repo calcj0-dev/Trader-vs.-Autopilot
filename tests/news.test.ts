@@ -5,7 +5,7 @@ import { buildNewsSchedule, newsAt, placeEventNews } from '../src/core/news';
 import type { MarketEvent } from '../src/core/types';
 import { marketOf } from './helpers';
 
-const mMs = monthMs(config);
+const mMs = monthMs(config.defaultYearSeconds);
 const toMonths = (sec: number) => (sec * 1000) / mMs;
 const opts = {
   gameMonths: config.gameMonths,
@@ -14,10 +14,10 @@ const opts = {
 };
 
 describe('T-14 ニュースの仕組み', () => {
-  it('秒の設定を月に換算する（80秒・240か月で 6〜10秒＝18〜30か月、4秒＝12か月）', () => {
-    expect(opts.intervalMonths.min).toBeCloseTo(18, 9);
-    expect(opts.intervalMonths.max).toBeCloseTo(30, 9);
-    expect(opts.showMonths).toBeCloseTo(12, 9);
+  it('秒の設定を月に換算する（1年5秒で 6〜10秒＝14.4〜24か月、4秒＝9.6か月）', () => {
+    expect(opts.intervalMonths.min).toBeCloseTo(14.4, 9);
+    expect(opts.intervalMonths.max).toBeCloseTo(24, 9);
+    expect(opts.showMonths).toBeCloseTo(9.6, 9);
   });
 
   it('ランダムの20個は1プレイで2回出ない。間隔は設定どおり（1〜500）', () => {
@@ -32,7 +32,7 @@ describe('T-14 ニュースの仕組み', () => {
         if (i === 0) return;
         const prev = items[i - 1]!;
         expect(it.start).toBeGreaterThanOrEqual(prev.start);
-        // ランダムは、前のニュースが消えてから 18〜30か月後に出る
+        // ランダムは、前のニュースが消えてから 6〜10秒（1年5秒で 14.4〜24か月）後に出る
         if (it.kind === 'random') {
           const gap = it.start - (prev.start + opts.showMonths);
           expect(gap).toBeGreaterThanOrEqual(opts.intervalMonths.min - 1e-9);

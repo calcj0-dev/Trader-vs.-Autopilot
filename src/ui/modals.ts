@@ -18,7 +18,7 @@ const panel = (heading: string, body: (HTMLElement | null)[], footer: HTMLElemen
     h('div', { className: 'modal-actions' }, footer),
   ]);
 
-/** 2択の切り替え（オン／オフ、ローソク足／折れ線） */
+/** 選択肢の切り替え（オン／オフ、ローソク足／折れ線、速さ） */
 function toggle<V extends string>(
   name: string,
   label: string,
@@ -76,6 +76,18 @@ const settingsModal: ModalFactory = (app) =>
           settings.chart = v;
         },
       ),
+      toggle(
+        'speed',
+        t('settings.speed'),
+        config.yearSecondsOptions.map((s) => ({
+          value: String(s),
+          text: t(s === config.defaultYearSeconds ? 'settings.speedDefault' : 'settings.speedOption', { seconds: s }),
+        })),
+        String(settings.speed),
+        (v) => {
+          settings.speed = Number(v);
+        },
+      ),
     ],
     [button(t('common.close'), () => app.closeModal())],
   );
@@ -83,12 +95,11 @@ const settingsModal: ModalFactory = (app) =>
 const params: ModalFactory = (app) => {
   const v = gameVars();
   const lines = [
-    t('params.initialCash', v),
+    t('params.income', v),
     t('params.period', v),
     t('params.trade'),
     t('params.fee'),
     t('params.tsumitate', v),
-    t('params.lump', v),
   ];
   return panel(
     t('params.heading'),

@@ -1,59 +1,61 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney } from '../src/currency';
+import { formatMoney, formatRate } from '../src/currency';
 import type { CurrencyConfig } from '../src/currency/types';
-import { currencies } from '../src/data';
-import { judge } from '../src/core/judge';
-import { simulateLumpSum, simulatePlayer, simulateTsumitate } from '../src/core/portfolio';
+import { config, currencies, titleData } from '../src/data';
+import { judge, pickTitle } from '../src/core/judge';
+import { simulatePlayer, simulateTsumitate } from '../src/core/portfolio';
 import { mulberry32 } from '../src/core/rng';
-import type { Order } from '../src/core/types';
-import { marketOf } from './helpers';
+import { marketOf, randomPresser } from './helpers';
 
 const jpy = currencies.JPY;
 
 describe('金額の表記', () => {
-  it('T-12 円：資産額は万円・小数1桁', () => {
-    expect(formatMoney(1_685_498, 'asset', jpy)).toBe('168.5万円');
+  it('T-12 円：資産額は万円・小数1桁・3桁区切り', () => {
+    expect(formatMoney(51_234_000, 'asset', jpy)).toBe('5,123.4万円');
+    expect(formatMoney(123_456_000, 'asset', jpy)).toBe('12,345.6万円');
     expect(formatMoney(982_000, 'asset', jpy)).toBe('98.2万円');
     expect(formatMoney(1_000_000, 'asset', jpy)).toBe('100.0万円');
   });
 
-  it('円：文中の初期資金は「100万円」、細かい金額は「4,167円」', () => {
-    expect(formatMoney(1_000_000, 'whole', jpy)).toBe('100万円');
+  it('円：文中の金額は「10万円」「2,400万円」、細かい金額は「4,167円」', () => {
+    expect(formatMoney(100_000, 'whole', jpy)).toBe('10万円');
+    expect(formatMoney(24_000_000, 'whole', jpy)).toBe('2,400万円');
     expect(formatMoney(1_000_000 / 240, 'plain', jpy)).toBe('4,167円');
+  });
+
+  it('積立との差は小数1桁、+・−（全角）付き', () => {
+    expect(formatRate(0.12345)).toBe('+12.3%');
+    expect(formatRate(-0.0468)).toBe('−4.7%');
+    expect(formatRate(0)).toBe('0.0%');
+    expect(formatRate(-0.00001)).toBe('0.0%');
   });
 });
 
 describe('T-18 計算は通貨に依存しない', () => {
-  // 仮の通貨：初期資金1万、最小単位0.01
+  // 仮の通貨：毎月100、最小単位0.01
   const fake: CurrencyConfig = {
     code: 'TST',
-    initialCash: 10_000,
+    monthlyIncome: 100,
     minorUnit: 0.01,
     formats: jpy.formats,
   };
 
-  it('同じ相場・同じ操作なら、最終資産の比と勝敗が同じ（1〜300）', () => {
+  it('同じ相場・同じ操作なら、最終資産の比・勝敗・称号が同じ（1〜300）', () => {
     for (let seed = 1; seed <= 300; seed++) {
-      const { closes } = marketOf(seed);
-      const rng = mulberry32(seed * 7);
-      const orders: Order[] = [];
-      let holding = false;
-      for (let m = 0; m < closes.length; m++) {
-        if (rng() < 15 / 240) {
-          orders.push({ month: m, type: holding ? 'sell' : 'buy' });
-          holding = !holding;
-        }
-      }
+      const { market, closes } = marketOf(seed);
+      const orders = randomPresser(closes.length, mulberry32(seed * 7), 40);
       const run = (c: CurrencyConfig) => {
-        const me = simulatePlayer(closes, orders, c.initialCash);
-        const ts = simulateTsumitate(closes, c.initialCash);
-        const lump = simulateLumpSum(closes, c.initialCash);
-        return { ratio: me.final / c.initialCash, r: judge(me.final, ts.final, lump.final, me.trades, c.minorUnit) };
+        const me = simulatePlayer(closes, orders, c.monthlyIncome);
+        const ts = simulateTsumitate(closes, c.monthlyIncome);
+        const r = judge(me.final, ts.final, c.minorUnit, config.judge);
+        return { ratio: me.final / c.monthlyIncome, r, title: pickTitle(titleData, closes, market.scenario, me.trades, r) };
       };
       const a = run(jpy);
       const b = run(fake);
-      expect(b.ratio).toBeCloseTo(a.ratio, 9);
-      expect(b.r).toEqual(a.r);
+      expect(b.ratio).toBeCloseTo(a.ratio, 6);
+      expect(b.r.outcome).toBe(a.r.outcome);
+      expect(b.r.diff).toBeCloseTo(a.r.diff, 9);
+      expect(b.title).toBe(a.title);
     }
   });
 });

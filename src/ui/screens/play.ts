@@ -2,7 +2,8 @@
 
 import { sfx, vibrate } from '../../audio';
 import { config, marketParams, monthMs, newsData, titleData } from '../../data';
-import { formatMoney, getCurrency } from '../../currency';
+import { formatMoney, formatRate, getCurrency } from '../../currency';
+import { avgPrice } from '../../core/portfolio';
 import { buildNewsSchedule, newsAt, type NewsItem } from '../../core/news';
 import type { TradeType } from '../../core/types';
 import { setLastPlay } from '../../game/lastResult';
@@ -39,14 +40,9 @@ const isTouch = () => matchMedia('(pointer: coarse)').matches;
 const landscapeQuery = () => matchMedia('(orientation: landscape)');
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function formatRate(rate: number): string {
-  const sign = rate > 0 ? '+' : rate < 0 ? '−' : '';
-  return `${sign}${Math.abs(rate * 100).toFixed(1)}%`;
-}
-
 export const playScreen: ScreenFactory = (app: App) => {
   const currency = getCurrency();
-  const session = newSession(pickSeed(), marketParams(), currency.initialCash);
+  const session = newSession(pickSeed(), marketParams(), currency.monthlyIncome);
   const N = session.closes.length;
   const pre = session.preMonths;
   const stepMs = config.timing.countdownStepMs;
@@ -56,7 +52,8 @@ export const playScreen: ScreenFactory = (app: App) => {
   let paused = false;
   let phaseElapsed = 0;
 
-  const mMs = monthMs(config);
+  // 速さはプレイの開始時に決める（途中で設定を変えても、次のプレイから）
+  const mMs = monthMs(settings.speed);
   const clock = new MonthClock(mMs, () => {
     if (closeMonth(session)) onSettled();
     return !isFinished(session);
@@ -75,7 +72,10 @@ export const playScreen: ScreenFactory = (app: App) => {
   const elapsed = h('span', { className: 'elapsed' });
   const progressFill = h('div', { className: 'progress-fill' });
   const assetValue = h('p', { className: 'asset-value' });
-  const assetState = h('p', { className: 'asset-state' });
+  const assetStock = h('span', { className: 'asset-stock' });
+  const assetSep = h('span', { text: t('play.holdingSep') });
+  const assetCash = h('span', { className: 'asset-cash' });
+  const assetState = h('p', { className: 'asset-state' }, [assetStock, assetSep, assetCash]);
   const canvas = h('canvas', { className: 'chart-canvas' });
   const overlay = h('div', { className: 'chart-overlay', attrs: { 'aria-live': 'assertive' } });
   const notice = h('p', { className: 'order-notice', text: t('play.orderedThisMonth') });
@@ -121,7 +121,7 @@ export const playScreen: ScreenFactory = (app: App) => {
   const chart = new CandleChart(canvas, {
     up: config.colors.up,
     down: config.colors.down,
-    line: config.colors.lump,
+    line: config.colors.principal,
     text: '#1a1f2b',
     buyLabel: t('play.buy'),
     sellLabel: t('play.sell'),
@@ -199,7 +199,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       } else if (phase === 'ending' && phaseElapsed >= config.timing.endingMs) {
         // 結果画面へは1回だけ移る
         ticker.stop();
-        setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData) });
+        setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData, config.judge) });
         app.go('result');
         return;
       }
@@ -224,7 +224,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       progress,
       mode: settings.chart,
       marks,
-      buyPrice: session.portfolio.buyPrice,
+      buyPrice: avgPrice(session.portfolio),
       visible,
     });
 
@@ -241,14 +241,14 @@ export const playScreen: ScreenFactory = (app: App) => {
       assetValue.textContent = assetText;
       lastAssetText = assetText;
     }
-    if (p.buyPrice !== null) {
-      const rate = price / p.buyPrice - 1;
-      assetState.textContent = t('play.stock', { rate: formatRate(rate) });
-      assetState.dataset.sign = rate > 0 ? 'up' : rate < 0 ? 'down' : '';
-    } else {
-      assetState.textContent = t('play.cash');
-      assetState.dataset.sign = '';
-    }
+    // 持っているものを両方出す：「株 ◯万円（+◯%）／現金 ◯万円」。増減率は平均の買値と比べる
+    const avg = avgPrice(p);
+    const stockText = avg === null ? '' : t('play.stock', { amount: formatMoney(p.shares * price), rate: formatRate(price / avg - 1) });
+    const cashText = p.cash > 0 || avg === null ? t('play.cash', { amount: formatMoney(p.cash) }) : '';
+    if (assetStock.textContent !== stockText) assetStock.textContent = stockText;
+    if (assetCash.textContent !== cashText) assetCash.textContent = cashText;
+    assetSep.hidden = stockText === '' || cashText === '';
+    assetStock.dataset.sign = avg === null ? '' : price > avg ? 'up' : price < avg ? 'down' : '';
 
     // 重ねて出す文字（カウントダウン・再開・終了）
     let text = '';

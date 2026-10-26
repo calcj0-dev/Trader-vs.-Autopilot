@@ -1,7 +1,7 @@
 // 結果画像 1200×630（設計書 7.12.1）。画面に出さない Canvas に描いて PNG にする
 
 import { config, siteUrl } from '../data';
-import { formatMoney } from '../currency';
+import { formatMoney, formatRate } from '../currency';
 import type { LastPlay } from '../game/lastResult';
 import { t } from '../i18n';
 import { compareData, compareStyle, drawCompareOn } from '../ui/chart/compare';
@@ -14,7 +14,8 @@ const SUB = '#6b7385';
 const SURFACE = '#f5f7fa';
 
 const OUTCOME_COLOR = {
-  big_win: config.colors.gold,
+  historic: config.colors.gold,
+  rout: config.colors.gold,
   win: config.colors.up,
   draw: SUB,
   lose: SUB,
@@ -62,7 +63,7 @@ export async function renderResultImage(play: LastPlay): Promise<Blob | null> {
   drawCompareOn(ctx, 640, 470, compareData(play), compareStyle, 1, { top: 30, right: 24, bottom: 30, left: 24 });
   ctx.restore();
 
-  // 右：勝敗・一括投資派・称号・3者の金額・売買回数・相場
+  // 右：勝敗・積立との差・称号・3つの金額・売った回数・相場
   const x = 720;
   const right = W - 40;
   const maxW = right - x;
@@ -74,12 +75,11 @@ export async function renderResultImage(play: LastPlay): Promise<Blob | null> {
   ctx.fillText(t(`result.outcome.${o}`), x, y);
   y += 100;
 
-  if (result.judgement.isLumpHolder) {
-    ctx.fillStyle = TEXT;
-    fitText(ctx, t('result.lumpHolder'), maxW, 24, 500);
-    ctx.fillText(t('result.lumpHolder'), x, y);
-    y += 38;
-  }
+  const diff = t('result.diff', { diff: formatRate(result.judgement.diff) });
+  ctx.fillStyle = TEXT;
+  fitText(ctx, diff, maxW, 26, 700);
+  ctx.fillText(diff, x, y);
+  y += 42;
 
   const honor = t('result.honor', { title: t(`honor.${result.title}`) });
   const hs = fitText(ctx, honor, maxW - 32, 26, 700, 16);
@@ -94,7 +94,7 @@ export async function renderResultImage(play: LastPlay): Promise<Blob | null> {
   const rows: [string, number, string][] = [
     [t('result.you'), result.final, config.colors.up],
     [t('result.tsumitate'), result.tsumitate.final, config.colors.tsumitate],
-    [t('result.lump'), result.lump.final, config.colors.lump],
+    [t('result.principal'), result.principal[result.principal.length - 1] ?? 0, config.colors.principal],
   ];
   for (const [label, amount, color] of rows) {
     ctx.fillStyle = color;
@@ -103,7 +103,7 @@ export async function renderResultImage(play: LastPlay): Promise<Blob | null> {
     ctx.font = `500 26px ${FONT}`;
     ctx.fillText(label, x + 38, y + 4);
     ctx.textAlign = 'right';
-    ctx.font = `700 ${label === rows[0]![0] ? 40 : 32}px ${FONT}`;
+    fitText(ctx, formatMoney(amount), maxW - 150, label === rows[0]![0] ? 40 : 32, 700);
     ctx.fillText(formatMoney(amount), right, y);
     ctx.textAlign = 'left';
     y += 54;
@@ -111,7 +111,7 @@ export async function renderResultImage(play: LastPlay): Promise<Blob | null> {
   y += 6;
   ctx.fillStyle = SUB;
   ctx.font = `500 22px ${FONT}`;
-  ctx.fillText(t('image.trades', { trades: result.trades.length }), x, y);
+  ctx.fillText(t('image.sells', { sells: result.sells }), x, y);
   y += 34;
   fitText(ctx, t('image.scenario', { scenario: t(`scenario.${result.scenario}.name`) }), maxW, 22, 500, 16);
   ctx.fillText(t('image.scenario', { scenario: t(`scenario.${result.scenario}.name`) }), x, y);

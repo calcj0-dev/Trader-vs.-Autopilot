@@ -22,7 +22,7 @@ export const rulesScreen: ScreenFactory = (app) => {
     h('ol', { className: 'rule-list' }, [
       item('①', [h('p', { text: t('rules.line1', v) })]),
       item('②', [h('p', { text: t('rules.line2') }), h('p', { className: 'note', text: t('rules.line2note') })]),
-      item('③', [h('p', { text: t('rules.line3', v) }), h('p', { text: t('rules.line3b') })]),
+      item('③', [h('p', { text: t('rules.line3', v) }), h('p', { text: t('rules.line3b', v) })]),
     ]),
     h('div', { className: 'candle-legend' }, [candle('up', t('rules.candleUp')), candle('down', t('rules.candleDown'))]),
     h('p', { className: 'note', text: t('rules.note') }),

@@ -12,13 +12,14 @@ export type MoneyFormat = {
 };
 
 /**
- * asset：資産額（「168.5万円」）／ whole：文中の初期資金（「100万円」）／ plain：細かい金額（「4,167円」）
+ * asset：資産額（「5,123.4万円」）／ whole：文中の金額（「10万円」）／ plain：細かい金額（「4,167円」）
  */
 export type MoneyFormatKind = 'asset' | 'whole' | 'plain';
 
 export type CurrencyConfig = {
   code: string;
-  initialCash: number;
+  /** 毎月受け取る額（設計書 3.2） */
+  monthlyIncome: number;
   /** 勝敗の比較で丸める単位（円は 1） */
   minorUnit: number;
   formats: Record<MoneyFormatKind, MoneyFormat>;

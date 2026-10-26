@@ -7,15 +7,17 @@ import { onSettingsChange, settings } from '../settings';
 import { APP_VERSION, formatVersion } from '../version';
 import { h } from './dom';
 
-/** 文言に差し込むゲームの数値。期間・速さ・初期資金を変えると文言も変わる（T-13） */
-export function gameVars(g: Pick<GameConfig, 'gameMonths' | 'gameSeconds'> = config) {
+/** 文言に差し込むゲームの数値。期間・速さ・毎月の額・勝敗の区切りを変えると文言も変わる（T-13・T-21） */
+export function gameVars(g: Pick<GameConfig, 'gameMonths' | 'judge'> = config, yearSeconds = settings.speed) {
   const c = getCurrency();
   return {
-    initialCash: formatMoney(c.initialCash, 'whole'),
+    income: formatMoney(c.monthlyIncome, 'whole'),
     years: g.gameMonths / 12,
     months: g.gameMonths,
-    seconds: g.gameSeconds,
-    monthly: formatMoney(c.initialCash / g.gameMonths, 'plain'),
+    seconds: Math.round((g.gameMonths / 12) * yearSeconds),
+    yearSeconds,
+    rout: Math.round(g.judge.rout * 100),
+    historic: Math.round(g.judge.historic * 100),
   };
 }
 

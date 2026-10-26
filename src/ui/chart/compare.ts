@@ -1,4 +1,4 @@
-// 結果の3本線（設計書 5.8）：あなた（赤・太、売買の印）、積立（緑）、一括放置（灰・点線）。背景にローソク足を薄く
+// 結果の3本線（設計書 5.8）：あなた（赤・太、売買の印）、積立（緑）、元本（灰・点線）。背景にローソク足を薄く
 
 import type { Candle, Trade } from '../../core/types';
 import { config } from '../../data';
@@ -7,7 +7,8 @@ import type { LastPlay } from '../../game/lastResult';
 export type CompareData = {
   you: number[];
   tsumitate: number[];
-  lump: number[];
+  /** 元本（受け取ったお金の合計） */
+  principal: number[];
   trades: Trade[];
   /** ゲーム期間のローソク足（背景に薄く描く。縦軸は別に合わせる） */
   candles: Candle[];
@@ -16,7 +17,7 @@ export type CompareData = {
 export type CompareStyle = {
   you: string;
   tsumitate: string;
-  lump: string;
+  principal: string;
   up: string;
   down: string;
   grid: string;
@@ -73,7 +74,7 @@ export function drawCompareOn(
   // 3本線の縦軸
   let lo = Infinity;
   let hi = -Infinity;
-  for (const arr of [d.you, d.tsumitate, d.lump]) for (const v of arr) {
+  for (const arr of [d.you, d.tsumitate, d.principal]) for (const v of arr) {
     lo = Math.min(lo, v);
     hi = Math.max(hi, v);
   }
@@ -93,7 +94,7 @@ export function drawCompareOn(
     ctx.stroke();
     ctx.restore();
   };
-  line(d.lump, s.lump, 2, [5, 4]);
+  line(d.principal, s.principal, 2, [5, 4]);
   line(d.tsumitate, s.tsumitate, 2);
   line(d.you, s.you, 3);
 
@@ -122,7 +123,7 @@ export function drawCompareOn(
 export const compareStyle = {
   you: config.colors.up,
   tsumitate: config.colors.tsumitate,
-  lump: config.colors.lump,
+  principal: config.colors.principal,
   up: config.colors.up,
   down: config.colors.down,
   grid: '#e3e7ed',
@@ -133,7 +134,7 @@ export function compareData(p: LastPlay): CompareData {
   return {
     you: result.history,
     tsumitate: result.tsumitate.history,
-    lump: result.lump.history,
+    principal: result.principal,
     trades: result.trades,
     candles: session.market.candles.slice(session.preMonths),
   };

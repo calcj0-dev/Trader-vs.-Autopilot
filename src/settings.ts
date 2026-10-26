@@ -1,5 +1,6 @@
-// 利用者の設定（効果音・チャートの表示・ルールの省略）。端末に保存する
+// 利用者の設定（効果音・チャートの表示・速さ・ルールの省略）。端末に保存する
 
+import { config } from './data';
 import { load, save } from './storage';
 
 export type ChartMode = 'candle' | 'line';
@@ -20,6 +21,15 @@ export const settings = {
   },
   set chart(v: ChartMode) {
     save('chart', v);
+    notify();
+  },
+  /** 速さ（1年の秒数）。選択肢にない値が保存されていたら最初の設定に戻す */
+  get speed(): number {
+    const v = Number(load('speed', String(config.defaultYearSeconds)));
+    return config.yearSecondsOptions.includes(v) ? v : config.defaultYearSeconds;
+  },
+  set speed(v: number) {
+    save('speed', String(v));
     notify();
   },
   get rulesSeen(): boolean {

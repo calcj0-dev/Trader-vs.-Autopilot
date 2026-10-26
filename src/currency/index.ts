@@ -24,6 +24,13 @@ export function formatWith(amount: number, f: MoneyFormat): string {
   return `${f.prefix}${body}${f.suffix}`;
 }
 
+/** 割合の表記「+12.3%」「−4.7%」（小数1桁。マイナスは全角の −） */
+export function formatRate(rate: number): string {
+  const r = Math.round(rate * 1000) / 10;
+  const sign = r > 0 ? '+' : r < 0 ? '−' : '';
+  return `${sign}${Math.abs(r).toFixed(1)}%`;
+}
+
 export function formatMoney(amount: number, kind: MoneyFormatKind = 'asset', c: CurrencyConfig = current): string {
   return formatWith(amount, c.formats[kind]);
 }

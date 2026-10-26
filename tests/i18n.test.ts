@@ -27,8 +27,8 @@ describe('文言（i18n）', () => {
 
   it('差し込み {name} を置き換える。値がない差し込みはそのまま残す', () => {
     expect(format('{a}と{b}', { a: 1 })).toBe('1と{b}');
-    expect(t('rules.line1', { initialCash: '100万円', years: 20, seconds: 80 })).toBe(
-      '最初に100万円。20年分の相場が80秒で流れます',
+    expect(t('rules.line1', { income: '10万円', years: 20, seconds: 100 })).toBe(
+      '毎月10万円がもらえます。20年分の相場が100秒で流れます',
     );
   });
 });

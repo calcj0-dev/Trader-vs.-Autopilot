@@ -2,7 +2,7 @@
 
 const PREFIX = 'baka016.';
 
-export type StorageKey = 'sound' | 'chart' | 'rulesSeen' | 'hintSeen';
+export type StorageKey = 'sound' | 'chart' | 'speed' | 'rulesSeen' | 'hintSeen';
 
 export function load(key: StorageKey, fallback: string): string {
   try {

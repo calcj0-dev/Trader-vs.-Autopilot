@@ -31,7 +31,8 @@ export type Order = { month: number; type: TradeType };
 /** 約定した売買 */
 export type Trade = { month: number; type: TradeType; price: number };
 
-export type Outcome = 'big_win' | 'win' | 'draw' | 'lose';
+/** 歴史的勝利・圧勝・勝利・引き分け・負け（設計書 3.3） */
+export type Outcome = 'historic' | 'rout' | 'win' | 'draw' | 'lose';
 
 export type Range = { min: number; max: number };
 

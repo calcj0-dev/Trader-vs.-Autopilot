@@ -15,14 +15,18 @@ import titlesJson from './data/titles.json';
 
 export type GameConfig = {
   gameMonths: number;
-  gameSeconds: number;
+  /** 選べる速さ（1年の秒数）と最初の設定（設計書 3.2・Q15-4） */
+  yearSecondsOptions: number[];
+  defaultYearSeconds: number;
+  /** 勝敗の区切り（積立を何割上回れば圧勝・歴史的勝利か） */
+  judge: { rout: number; historic: number };
   preMonths: number;
   visibleCandles: number;
   visibleCandlesNarrow: number;
   narrowWidthPx: number;
   timing: { countdownStepMs: number; hintMs: number; resumeMs: number; endingMs: number; resultLineMs: number };
   news: { intervalSec: Range; showSec: number };
-  colors: { up: string; down: string; gold: string; tsumitate: string; lump: string };
+  colors: { up: string; down: string; gold: string; tsumitate: string; principal: string };
   links: { tameru: string; follow: string; xIntent: string; shareQuery: string; googlePrivacy: string; gaOptout: string };
 };
 
@@ -37,9 +41,9 @@ export const messagesByLocale = { ja: jaJson } satisfies Record<Locale, Messages
 /** 通貨ごとの設定。通貨を足すときは JSON を作ってここに1行足す */
 export const currencies = { JPY: jpyJson } satisfies Record<string, CurrencyConfig>;
 
-/** 1か月の長さ（ミリ秒）＝全体の秒数×1000÷期間の月数 */
-export function monthMs(c: Pick<GameConfig, 'gameSeconds' | 'gameMonths'>): number {
-  return (c.gameSeconds * 1000) / c.gameMonths;
+/** 1か月の長さ（ミリ秒）＝1年の秒数×1000÷12 */
+export function monthMs(yearSeconds: number): number {
+  return (yearSeconds * 1000) / 12;
 }
 
 export function marketParams(c: Pick<GameConfig, 'gameMonths' | 'preMonths'> = config): MarketParams {

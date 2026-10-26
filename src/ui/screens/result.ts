@@ -1,9 +1,9 @@
-// S4 結果（設計書 5.8）。勝敗・称号・3本線・3者の金額・種明かし・注意書き・もう一回
+// S4 結果（設計書 5.8）。勝敗・積立との差・称号・3本線・3つの金額・種明かし・注意書き・もう一回
 // シェア・結果画像・TAMERU・フォロー（設計書 5.8.2・7.12）
 
 import { sfx } from '../../audio';
 import { config, marketParams, titleData } from '../../data';
-import { formatMoney, getCurrency } from '../../currency';
+import { formatMoney, formatRate, getCurrency } from '../../currency';
 import type { Outcome } from '../../core/types';
 import { getLastPlay, setLastPlay, type LastPlay } from '../../game/lastResult';
 import { closeMonth, isFinished, newSession, placeOrder, sessionResult } from '../../game/session';
@@ -19,25 +19,21 @@ import { ensureHistoryEntry } from './play';
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** 開発用：結果画面を直接開いたときは、計算例（相場番号7・0買／60売／84買）の結果を出す */
+/** 開発用：結果画面を直接開いたときは、計算例1（相場番号7・毎月買い、60で売り、84から再び毎月買う）の結果を出す */
 function demoPlay(): LastPlay {
   const c = getCurrency();
-  const s = newSession(7, marketParams(), c.initialCash);
-  const orders = new Map<number, 'buy' | 'sell'>([
-    [0, 'buy'],
-    [60, 'sell'],
-    [84, 'buy'],
-  ]);
+  const s = newSession(7, marketParams(), c.monthlyIncome);
   while (!isFinished(s)) {
-    const o = orders.get(s.month);
-    if (o) placeOrder(s, o);
+    if (s.month === 60) placeOrder(s, 'sell');
+    else if (s.month < 60 || s.month >= 84) placeOrder(s, 'buy');
     closeMonth(s);
   }
-  return { session: s, result: sessionResult(s, c.minorUnit, titleData) };
+  return { session: s, result: sessionResult(s, c.minorUnit, titleData, config.judge) };
 }
 
 const OUTCOME_SOUND: Record<Outcome, () => void> = {
-  big_win: sfx.bigWin,
+  historic: sfx.bigWin,
+  rout: sfx.bigWin,
   win: sfx.win,
   draw: sfx.draw,
   lose: sfx.lose,
@@ -55,8 +51,6 @@ export const resultScreen: ScreenFactory = (app) => {
     return { el: h('section', { className: 'screen' }) };
   }
   const { result } = play;
-  const c = getCurrency();
-  const round = (x: number) => Math.round(x / c.minorUnit);
   const o = result.judgement.outcome;
 
   const sound = soundButton();
@@ -64,20 +58,19 @@ export const resultScreen: ScreenFactory = (app) => {
   const canvas = h('canvas', { className: 'compare-canvas' });
   const effects = h('div', { className: 'result-effects', attrs: { 'aria-hidden': 'true' } });
 
-  const row = (label: string, amount: number, beaten: boolean, cls: string) =>
+  const row = (label: string, amount: number, cls: string) =>
     h('div', { className: `final-row ${cls}` }, [
       h('span', { className: 'final-label', text: label }),
       h('span', { className: 'final-amount', text: formatMoney(amount) }),
-      h('span', { className: 'final-check', text: beaten ? '✓' : '', attrs: beaten ? { 'aria-label': t('result.beaten') } : {} }),
     ]);
 
   const outcomeEl = h('p', { className: `outcome outcome-${o} reveal`, text: t(`result.outcome.${o}`) });
-  const lumpEl = result.judgement.isLumpHolder ? h('p', { className: 'lump-holder reveal', text: t('result.lumpHolder') }) : null;
+  const diffEl = h('p', { className: 'outcome-diff reveal', text: t('result.diff', { diff: formatRate(result.judgement.diff) }) });
   const honorEl = h('p', { className: 'honor reveal', text: t('result.honor', { title: t(`honor.${result.title}`) }) });
   const finalsEl = h('div', { className: 'finals reveal' }, [
-    row(t('result.you'), result.final, false, 'you'),
-    row(t('result.tsumitate'), result.tsumitate.final, round(result.final) > round(result.tsumitate.final), 'tsumitate'),
-    row(t('result.lump'), result.lump.final, round(result.final) > round(result.lump.final), 'lump'),
+    row(t('result.you'), result.final, 'you'),
+    row(t('result.tsumitate'), result.tsumitate.final, 'tsumitate'),
+    row(t('result.principal'), result.principal[result.principal.length - 1] ?? 0, 'principal'),
   ]);
   const actionsEl = h('div', { className: 'main-actions reveal' }, [
     button(t('result.share'), () => onShare(), 'btn btn-secondary'),
@@ -86,12 +79,12 @@ export const resultScreen: ScreenFactory = (app) => {
 
   const el = h('section', { className: 'screen screen-result' }, [
     h('div', { className: 'top-bar result-bar' }, [h('h2', { className: 'heading', text: t('result.heading', gameVars()) }), sound.el]),
-    h('div', { className: 'result-head' }, [outcomeEl, lumpEl, honorEl, effects]),
+    h('div', { className: 'result-head' }, [outcomeEl, diffEl, honorEl, effects]),
     h('div', { className: 'compare-box' }, [canvas]),
     finalsEl,
     actionsEl,
     h('div', { className: 'result-detail' }, [
-      h('p', { text: t('result.summary', { trades: result.trades.length, reveal: t(`scenario.${result.scenario}.reveal`) }) }),
+      h('p', { text: t('result.summary', { sells: result.sells, reveal: t(`scenario.${result.scenario}.reveal`) }) }),
       h('p', { className: 'note', text: t('result.caution') }),
     ]),
     h('button', { className: 'image-thumb', attrs: { type: 'button', 'aria-label': t('result.imagePreview') }, on: { click: () => app.openModal('image') } }, [
@@ -129,7 +122,7 @@ export const resultScreen: ScreenFactory = (app) => {
 
   // ---- 出し方（設計書 5.8.1）：3本線を1.2秒で描く → 勝敗と音 → 残りを0.2秒ずつ ----
   const data = compareData(play);
-  const reveals: HTMLElement[] = [outcomeEl, lumpEl, honorEl, finalsEl, actionsEl].filter((x) => x !== null);
+  const reveals: HTMLElement[] = [outcomeEl, diffEl, honorEl, finalsEl, actionsEl];
   const timers: number[] = [];
   let raf = 0;
   let done = false;
@@ -146,9 +139,10 @@ export const resultScreen: ScreenFactory = (app) => {
   const celebrate = () => {
     OUTCOME_SOUND[o]();
     if (reducedMotion()) return;
-    if (o === 'big_win') {
+    if (o === 'historic' || o === 'rout') {
+      // 歴史的勝利は紙吹雪を多めに
       const colors = [config.colors.up, config.colors.down, config.colors.gold, config.colors.tsumitate];
-      for (let i = 0; i < 36; i++) {
+      for (let i = 0; i < (o === 'historic' ? 72 : 36); i++) {
         const piece = h('span', { className: 'confetti' });
         piece.style.left = `${Math.random() * 100}%`;
         piece.style.background = colors[i % colors.length]!;

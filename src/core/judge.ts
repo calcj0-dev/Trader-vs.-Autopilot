@@ -1,31 +1,31 @@
-// 勝敗・一括投資派・称号（設計書 3.3・3.7・7.5・7.6）
+// 勝敗・称号（設計書 3.3・3.7・7.5・7.6）
 
 import type { Outcome, ScenarioKey, Trade } from './types';
 
 export type Judgement = {
   outcome: Outcome;
-  /** 約定した売買が「買」1回だけ（買った月は問わない） */
-  isLumpHolder: boolean;
-  /** 公開後の「全体の勝率」に数えるか（一括投資派は除く） */
-  countsForWinRate: boolean;
+  /** 積立との差（あなた÷積立−1） */
+  diff: number;
 };
 
+/** 勝敗の区切り（config.json の judge）。積立を何割上回れば圧勝・歴史的勝利か */
+export type JudgeThresholds = { rout: number; historic: number };
+
 /**
- * 3者の最終資産を通貨の最小単位に丸めてから比べる（画面の表示と食い違わないように）。
- * trades には約定した売買を渡す
+ * 最終資産を通貨の最小単位に丸めてから比べる（画面の表示と食い違わないように）。
+ * 圧勝・歴史的勝利の境目も、積立×(1＋区切り) を最小単位に丸めた額と比べる（+10% ちょうどを確実に圧勝にするため）
  */
-export function judge(me: number, tsumitate: number, lump: number, trades: Trade[], minorUnit: number): Judgement {
+export function judge(me: number, tsumitate: number, minorUnit: number, th: JudgeThresholds): Judgement {
   const round = (x: number) => Math.round(x / minorUnit);
   const m = round(me);
   const t = round(tsumitate);
-  const l = round(lump);
-  const isLumpHolder = trades.length === 1 && trades[0]!.type === 'buy';
   let outcome: Outcome;
-  if (m > t && m > l) outcome = 'big_win';
-  else if (m > t) outcome = 'win';
-  else if (m === t) outcome = 'draw';
-  else outcome = 'lose';
-  return { outcome, isLumpHolder, countsForWinRate: !isLumpHolder };
+  if (m === t) outcome = 'draw';
+  else if (m < t) outcome = 'lose';
+  else if (m >= Math.round(t * (1 + th.historic))) outcome = 'historic';
+  else if (m >= Math.round(t * (1 + th.rout))) outcome = 'rout';
+  else outcome = 'win';
+  return { outcome, diff: me / tsumitate - 1 };
 }
 
 export type TitleId =
@@ -61,9 +61,13 @@ export type TitleData = {
   rules: {
     id: string;
     when: {
+      /** 約定した回数（買・売の合計） */
       trades?: { min?: number; max?: number };
+      /** 約定した売りの回数 */
+      sells?: { min?: number; max?: number };
       outcome?: string[];
-      lumpHolder?: boolean;
+      /** 積立との差がこれより大きい */
+      diffAbove?: number;
       nearBottom?: boolean;
       scenario?: string[];
     };
@@ -85,23 +89,26 @@ export function soldNearBottom(closes: number[], trades: Trade[], rule: TitleDat
   });
 }
 
-/** 称号：titles.json の上から順に条件を見て、最初に当てはまったもの */
+const inRange = (n: number, r?: { min?: number; max?: number }) =>
+  !r || ((r.min === undefined || n >= r.min) && (r.max === undefined || n <= r.max));
+
+/** 称号：titles.json の上から順に条件を見て、最初に当てはまったもの（同じ ID が2行あれば「または」） */
 export function pickTitle(
   data: TitleData,
   closes: number[],
   scenario: ScenarioKey,
   trades: Trade[],
-  j: Pick<Judgement, 'outcome' | 'isLumpHolder'>,
+  j: Judgement,
 ): TitleId {
   const n = trades.length;
+  const sells = trades.filter((t) => t.type === 'sell').length;
   let near: boolean | null = null;
   const nearBottom = () => (near ??= soldNearBottom(closes, trades, data.nearBottom));
   for (const rule of data.rules) {
     const w = rule.when;
-    if (w.trades?.min !== undefined && n < w.trades.min) continue;
-    if (w.trades?.max !== undefined && n > w.trades.max) continue;
+    if (!inRange(n, w.trades) || !inRange(sells, w.sells)) continue;
     if (w.outcome && !w.outcome.includes(j.outcome)) continue;
-    if (w.lumpHolder !== undefined && w.lumpHolder !== j.isLumpHolder) continue;
+    if (w.diffAbove !== undefined && !(j.diff > w.diffAbove)) continue;
     if (w.scenario && !w.scenario.includes(scenario)) continue;
     if (w.nearBottom !== undefined && w.nearBottom !== nearBottom()) continue;
     if ((TITLE_IDS as readonly string[]).includes(rule.id)) return rule.id as TitleId;

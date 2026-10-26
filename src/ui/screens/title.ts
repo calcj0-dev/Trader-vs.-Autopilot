@@ -12,7 +12,7 @@ export const titleScreen: ScreenFactory = (app) => {
     h('div', { className: 'top-bar' }, [versionLabel(), sound.el]),
     h('div', { className: 'title-deco', attrs: { 'aria-hidden': 'true' } }),
     h('h1', { className: 'title', text: t('title.main') }),
-    h('p', { className: 'subtitle', text: t('title.sub') }),
+    h('p', { className: 'subtitle', text: t('title.sub', gameVars()) }),
     h('p', { className: 'lead', text: t('title.lead', gameVars()) }),
     button(t('title.start'), () => app.go(settings.rulesSeen ? 'play' : 'rules'), 'btn btn-primary btn-start'),
     h('nav', { className: 'link-row' }, [

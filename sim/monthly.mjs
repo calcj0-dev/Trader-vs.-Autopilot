@@ -54,8 +54,9 @@ export function judge(player, tsumitate) {
   let outcome;
   if (me === ts) outcome = 'draw';
   else if (me < ts) outcome = 'lose';
-  else if (diff >= MONTHLY.historic) outcome = 'historic';
-  else if (diff >= MONTHLY.rout) outcome = 'rout';
+  // 境目は 積立×(1＋区切り) を円に丸めた額と比べる（+10% ちょうどを確実に圧勝にするため）
+  else if (me >= Math.round(ts * (1 + MONTHLY.historic))) outcome = 'historic';
+  else if (me >= Math.round(ts * (1 + MONTHLY.rout))) outcome = 'rout';
   else outcome = 'win';
   return { outcome, diff };
 }
