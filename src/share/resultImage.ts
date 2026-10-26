@@ -10,7 +10,7 @@ const W = 1200;
 const H = 630;
 const FONT = 'system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif';
 const TEXT = '#1a1f2b';
-const SUB = '#6b7385';
+const SUB = '#5f6779';
 const SURFACE = '#f5f7fa';
 
 const OUTCOME_COLOR = {
