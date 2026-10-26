@@ -56,6 +56,7 @@ export const MESSAGE_KEYS = [
   'pause.heading',
   'pause.resume',
   'pause.restart',
+  'pause.toTitle',
   'pause.settings',
 
   'settings.heading',

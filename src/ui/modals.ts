@@ -48,6 +48,7 @@ const pause: ModalFactory = (app) =>
         markRetry();
         app.go('play');
       }),
+      linkButton(t('pause.toTitle'), () => app.go('title')),
       linkButton(t('pause.settings'), () => app.openModal('settings')),
     ],
   );
