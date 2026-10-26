@@ -31,6 +31,7 @@
     "follow": "https://x.com/shooojp19",
     "xIntent": "https://x.com/intent/post",
     "googlePrivacy": "https://policies.google.com/privacy",
+    "vercelPrivacy": "https://vercel.com/legal/privacy-policy",
     "gaOptout": "https://tools.google.com/dlpage/gaoptout"
   }
 }

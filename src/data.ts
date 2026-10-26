@@ -28,7 +28,7 @@ export type GameConfig = {
   /** eventMinSec：出来事のニュースを最低この秒数は出す（次の出来事のニュースはそのあと。Q14） */
   news: { intervalSec: Range; showSec: number; eventMinSec: number };
   colors: { up: string; down: string; gold: string; tsumitate: string; principal: string };
-  links: { tameru: string; follow: string; xIntent: string; googlePrivacy: string; gaOptout: string };
+  links: { tameru: string; follow: string; xIntent: string; googlePrivacy: string; gaOptout: string; vercelPrivacy: string };
 };
 
 export const config = configJson satisfies GameConfig;

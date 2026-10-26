@@ -1,6 +1,6 @@
 // 重ね表示 M1〜M6（設計書 5.9）。#5 では器と、いま作れる中身（設定・設定値・プライバシー）まで
 
-import { markRetry, track } from '../analytics';
+import { gaId, markRetry, track } from '../analytics';
 import { config } from '../data';
 import { getLastPlay } from '../game/lastResult';
 import { postText } from '../share/postText';
@@ -167,9 +167,17 @@ const privacy: ModalFactory = (app) =>
   panel(
     t('privacy.heading'),
     [
-      ...(['privacy.p1', 'privacy.p2', 'privacy.p3', 'privacy.p4', 'privacy.p5'] as const).map((k) => h('p', { text: t(k) })),
-      h('p', {}, [externalLink(t('privacy.googlePolicy'), config.links.googlePrivacy)]),
-      h('p', {}, [externalLink(t('privacy.optout'), config.links.gaOptout)]),
+      // GA4 を入れているか（測定ID があるか）で文言を切り替える。入れていないときは Vercel Analytics だけ（Q16）
+      ...(gaId()
+        ? [
+            ...(['privacy.p1', 'privacy.p2', 'privacy.p3', 'privacy.p4', 'privacy.p5'] as const).map((k) => h('p', { text: t(k) })),
+            h('p', {}, [externalLink(t('privacy.googlePolicy'), config.links.googlePrivacy)]),
+            h('p', {}, [externalLink(t('privacy.optout'), config.links.gaOptout)]),
+          ]
+        : [
+            ...(['privacy.basic.p1', 'privacy.basic.p2', 'privacy.basic.p3', 'privacy.basic.p4'] as const).map((k) => h('p', { text: t(k) })),
+            h('p', {}, [externalLink(t('privacy.vercelPolicy'), config.links.vercelPrivacy)]),
+          ]),
     ],
     [button(t('common.close'), () => app.closeModal())],
   );

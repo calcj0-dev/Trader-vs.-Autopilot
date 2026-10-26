@@ -88,6 +88,11 @@ export const MESSAGE_KEYS = [
   'privacy.p5',
   'privacy.googlePolicy',
   'privacy.optout',
+  'privacy.basic.p1',
+  'privacy.basic.p2',
+  'privacy.basic.p3',
+  'privacy.basic.p4',
+  'privacy.vercelPolicy',
 
   'play.hint',
   'result.outcome.win',
