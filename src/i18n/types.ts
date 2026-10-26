@@ -42,6 +42,7 @@ export const MESSAGE_KEYS = [
   'play.resuming',
   'play.ended',
   'play.ordering',
+  'play.buyMore',
   'play.orderedThisMonth',
 
   'result.heading',
@@ -122,6 +123,7 @@ export const MESSAGE_KEYS = [
   'result.follow',
   'image.shareWithImage',
   'image.save',
+  'image.longPress',
   'image.alt',
   'image.footerTitle',
   'image.disclaimer',
@@ -133,7 +135,6 @@ export const MESSAGE_KEYS = [
   'play.holdingSep',
   'settings.speed',
   'settings.speedOption',
-  'settings.speedDefault',
   'params.income',
   'result.outcome.historic',
   'result.outcome.rout',

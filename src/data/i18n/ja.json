@@ -167,7 +167,6 @@
   "play.holdingSep": "／",
   "settings.speed": "速さ",
   "settings.speedOption": "1年 {seconds}秒",
-  "settings.speedDefault": "1年 {seconds}秒（ふつう）",
   "params.income": "毎月もらうお金：{income}",
   "result.outcome.historic": "歴史的勝利",
   "result.outcome.rout": "圧勝",
@@ -175,5 +174,7 @@
   "result.principal": "元本",
   "image.sells": "売った回数 {sells}回",
   "share.historic": "毎月{income}を{years}年売買して、積立に歴史的勝利！（積立より{diff}）最終{amount} 称号：「{title}」 #積立投資を超えろ",
-  "share.rout": "毎月{income}を{years}年売買して、積立に圧勝しました！（積立より{diff}）最終{amount} 称号：「{title}」 #積立投資を超えろ"
+  "share.rout": "毎月{income}を{years}年売買して、積立に圧勝しました！（積立より{diff}）最終{amount} 称号：「{title}」 #積立投資を超えろ",
+  "play.buyMore": "買増",
+  "image.longPress": "保存できないときは、画像を長押しして保存してください"
 }

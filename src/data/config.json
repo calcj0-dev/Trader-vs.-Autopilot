@@ -1,7 +1,7 @@
 {
   "gameMonths": 240,
-  "yearSecondsOptions": [4, 5, 6, 8, 10],
-  "defaultYearSeconds": 5,
+  "yearSecondsOptions": [4, 5, 6, 8],
+  "defaultYearSeconds": 4,
   "judge": { "rout": 0.1, "historic": 0.2 },
   "preMonths": 24,
   "visibleCandles": 40,
@@ -16,7 +16,8 @@
   },
   "news": {
     "intervalSec": { "min": 6, "max": 10 },
-    "showSec": 4
+    "showSec": 4,
+    "eventMinSec": 1.5
   },
   "colors": {
     "up": "#D93A3F",

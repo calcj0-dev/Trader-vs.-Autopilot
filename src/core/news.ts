@@ -29,6 +29,8 @@ export type NewsOptions = {
   intervalMonths: Range;
   /** 1つのニュースを出す長さ（月） */
   showMonths: number;
+  /** 出来事のニュースを最低この長さは出す（月）。次の出来事のニュースはそのあとに送る（Q14） */
+  eventMinMonths: number;
 };
 
 /**
@@ -64,7 +66,8 @@ export function placeEventNews(events: MarketEvent[], data: NewsData, gameMonths
 
 /**
  * 予定表を作る。ランダムのニュースは前のニュースが消えてから intervalMonths ごとに、使っていないものから1つ。
- * 出来事のニュースは、その月の始めに割り込む。ランダムの間隔はそこから数え直す
+ * 出来事のニュースは、その月の始めに割り込む。ランダムの間隔はそこから数え直す。
+ * 出来事のニュースが続くときは、前の出来事のニュースを eventMinMonths は出してから次を出す（Q14）
  */
 export function buildNewsSchedule(seed: number, events: MarketEvent[], data: NewsData, opts: NewsOptions): NewsItem[] {
   const rng: Rng = mulberry32((seed ^ 0x5bd1e995) >>> 0);
@@ -75,13 +78,21 @@ export function buildNewsSchedule(seed: number, events: MarketEvent[], data: New
 
   let cursor = 0;
   let ev = 0;
+  let lastEvent = -Infinity;
   for (;;) {
     const next = pending[ev];
+    const nextStart = next ? Math.max(next.month, lastEvent + opts.eventMinMonths) : Infinity;
+    if (next && nextStart >= opts.gameMonths) {
+      // 送った結果、期間の外になった出来事のニュースは出さない
+      ev++;
+      continue;
+    }
     const candidate = unused.length > 0 ? cursor + min + rng() * (max - min) : Infinity;
     // ランダムを出すと出来事に重なるなら、出来事を先に出す
-    if (next && next.month < candidate + opts.showMonths) {
-      items.push({ kind: 'event', id: next.id, start: next.month });
-      cursor = next.month + opts.showMonths;
+    if (next && nextStart < candidate + opts.showMonths) {
+      items.push({ kind: 'event', id: next.id, start: nextStart });
+      cursor = nextStart + opts.showMonths;
+      lastEvent = nextStart;
       ev++;
     } else if (candidate < opts.gameMonths) {
       const id = unused.splice(Math.floor(rng() * unused.length), 1)[0]!;

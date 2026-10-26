@@ -65,6 +65,7 @@ export const playScreen: ScreenFactory = (app: App) => {
     gameMonths: N,
     intervalMonths: { min: toMonths(config.news.intervalSec.min), max: toMonths(config.news.intervalSec.max) },
     showMonths: toMonths(config.news.showSec),
+    eventMinMonths: toMonths(config.news.eventMinSec),
   });
 
   // ---- 画面の部品 ----
@@ -268,7 +269,9 @@ export const playScreen: ScreenFactory = (app: App) => {
       [sell, 'sell'],
     ] as const) {
       const ordering = session.pending === type;
-      btn.textContent = ordering ? t('play.ordering') : t(type === 'buy' ? 'play.buy' : 'play.sell');
+      // 株を持っていて買い足せるときは「買増」
+      const label = type === 'sell' ? 'play.sell' : session.portfolio.shares > 0 ? 'play.buyMore' : 'play.buy';
+      btn.textContent = ordering ? t('play.ordering') : t(label);
       btn.classList.toggle('is-ordering', ordering);
       btn.classList.toggle('is-off', !ordering && !(on && canOrder(session, type)));
       btn.setAttribute('aria-disabled', String(!(on && canOrder(session, type))));

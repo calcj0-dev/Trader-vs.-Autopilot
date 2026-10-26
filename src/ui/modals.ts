@@ -4,7 +4,7 @@ import { config } from '../data';
 import { getLastPlay } from '../game/lastResult';
 import { postText } from '../share/postText';
 import { resultImage } from '../share/resultImage';
-import { canShareImage, saveImage, shareWithImage } from '../share/share';
+import { canShareImage, saveImage, shareWithImage, toDataUrl } from '../share/share';
 import { t } from '../i18n';
 import { settings, type ChartMode } from '../settings';
 import type { ModalFactory, ModalName } from './app';
@@ -81,7 +81,7 @@ const settingsModal: ModalFactory = (app) =>
         t('settings.speed'),
         config.yearSecondsOptions.map((s) => ({
           value: String(s),
-          text: t(s === config.defaultYearSeconds ? 'settings.speedDefault' : 'settings.speedOption', { seconds: s }),
+          text: t('settings.speedOption', { seconds: s }),
         })),
         String(settings.speed),
         (v) => {
@@ -117,7 +117,7 @@ const image: ModalFactory = (app) => {
   const play = getLastPlay();
   const img = h('img', { className: 'image-preview', attrs: { alt: t('image.alt') } });
   const shareBtn = button(t('image.shareWithImage'), () => blob && void shareWithImage(play ? postText(play.result) : '', blob), 'btn btn-primary');
-  const saveBtn = button(t('image.save'), () => blob && saveImage(blob), 'link');
+  const saveBtn = button(t('image.save'), () => blob && void saveImage(blob), 'link');
   shareBtn.hidden = true;
   saveBtn.disabled = true;
   let blob: Blob | null = null;
@@ -125,14 +125,18 @@ const image: ModalFactory = (app) => {
     void resultImage(play).then((b) => {
       blob = b;
       if (!b) return;
-      const url = URL.createObjectURL(b);
-      img.src = url;
-      img.addEventListener('load', () => setTimeout(() => URL.revokeObjectURL(url), 1000), { once: true });
       shareBtn.hidden = !canShareImage(b);
       saveBtn.disabled = false;
+      return toDataUrl(b).then((u) => {
+        img.src = u;
+      });
     });
   }
-  return panel(t('image.heading'), [img], [shareBtn, saveBtn, button(t('common.close'), () => app.closeModal())]);
+  return panel(
+    t('image.heading'),
+    [img, h('p', { className: 'note', text: t('image.longPress') })],
+    [shareBtn, saveBtn, button(t('common.close'), () => app.closeModal())],
+  );
 };
 
 const portrait: ModalFactory = () =>

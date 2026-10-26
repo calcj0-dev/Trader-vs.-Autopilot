@@ -12,10 +12,10 @@ function ranges(obj: unknown, path = ''): [string, Range][] {
 }
 
 describe('T-20 データの JSON', () => {
-  it('config.json：最初の速さは1年5秒（1か月約0.42秒）。選択肢に最初の設定が入っている', () => {
-    expect(config.defaultYearSeconds).toBe(5);
-    expect(monthMs(config.defaultYearSeconds)).toBeCloseTo(5000 / 12, 10);
-    expect(config.yearSecondsOptions).toEqual([4, 5, 6, 8, 10]);
+  it('config.json：最初の速さは1年4秒（1か月1/3秒）。選択肢は4・5・6・8秒', () => {
+    expect(config.defaultYearSeconds).toBe(4);
+    expect(monthMs(config.defaultYearSeconds)).toBeCloseTo(1000 / 3, 10);
+    expect(config.yearSecondsOptions).toEqual([4, 5, 6, 8]);
     expect(config.judge).toEqual({ rout: 0.1, historic: 0.2 });
   });
 

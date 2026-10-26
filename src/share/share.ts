@@ -35,19 +35,37 @@ export async function shareWithImage(text: string, blob: Blob): Promise<boolean>
   }
 }
 
-/** 画像を保存する。ダウンロードできない端末は、新しいタブに画像を出して長押しで保存してもらう */
-export function saveImage(blob: Blob): void {
+/**
+ * 画像を保存する。スマホは共有シート（「画像を保存」「写真に追加」がある）を開く。
+ * iPhone は blob: のURLから画像を保存できないため、新しいタブには出さない。
+ * 共有シートが使えなければダウンロード。どれもだめなら M4 の画像を長押しで保存してもらう
+ */
+export async function saveImage(blob: Blob): Promise<void> {
+  if (matchMedia('(pointer: coarse)').matches && canShareImage(blob)) {
+    try {
+      await navigator.share({ files: [imageFile(blob)] });
+      return;
+    } catch (e) {
+      // 利用者が閉じたときは何もしない。それ以外はダウンロードを試す
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+    }
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = IMAGE_FILE_NAME;
-  const supportsDownload = 'download' in a && !/iPhone|iPad|iPod/.test(navigator.userAgent);
-  if (supportsDownload) {
-    document.body.append(a);
-    a.click();
-    a.remove();
-  } else {
-    window.open(url, '_blank', 'noopener');
-  }
+  document.body.append(a);
+  a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** 長押しで保存できるよう、画像を data: のURLにする（blob: のURLは iPhone で保存できない） */
+export function toDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
 }

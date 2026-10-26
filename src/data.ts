@@ -25,7 +25,8 @@ export type GameConfig = {
   visibleCandlesNarrow: number;
   narrowWidthPx: number;
   timing: { countdownStepMs: number; hintMs: number; resumeMs: number; endingMs: number; resultLineMs: number };
-  news: { intervalSec: Range; showSec: number };
+  /** eventMinSec：出来事のニュースを最低この秒数は出す（次の出来事のニュースはそのあと。Q14） */
+  news: { intervalSec: Range; showSec: number; eventMinSec: number };
   colors: { up: string; down: string; gold: string; tsumitate: string; principal: string };
   links: { tameru: string; follow: string; xIntent: string; shareQuery: string; googlePrivacy: string; gaOptout: string };
 };

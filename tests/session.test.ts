@@ -28,14 +28,14 @@ afterEach(() => {
 });
 
 describe('1プレイの進行', () => {
-  it('最初の設定（1年5秒）で、240か月が約100秒（±1秒）で終わる', () => {
+  it('最初の設定（1年4秒）で、240か月が約80秒（±1秒）で終わる', () => {
     const { s, ms } = runToEnd(240, config.defaultYearSeconds);
     expect(isFinished(s)).toBe(true);
     expect(s.history).toHaveLength(240);
-    expect(Math.abs(ms - 100_000)).toBeLessThanOrEqual(1000);
+    expect(Math.abs(ms - 80_000)).toBeLessThanOrEqual(1000);
   });
 
-  it('T-21 速さ（1年 4・5・6・8・10秒）のどれでも最後まで進み、全体は 20年×1年の秒数（±1秒）', () => {
+  it('T-21 速さ（1年 4・5・6・8秒）のどれでも最後まで進み、全体は 20年×1年の秒数（±1秒）', () => {
     for (const ys of config.yearSecondsOptions) {
       const { s, ms } = runToEnd(240, ys);
       expect(isFinished(s), `${ys}`).toBe(true);
@@ -50,13 +50,13 @@ describe('1プレイの進行', () => {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => store.set(k, v),
     });
-    expect(settings.speed).toBe(5);
+    expect(settings.speed).toBe(4);
     settings.speed = 8;
     expect(store.get('baka016.speed')).toBe('8');
     expect(settings.speed).toBe(8);
     expect(gameVars().seconds).toBe(160);
-    store.set('baka016.speed', '7');
-    expect(settings.speed).toBe(5);
+    store.set('baka016.speed', '10');
+    expect(settings.speed).toBe(4);
   });
 
   it('T-13 期間120か月・1年6秒（1か月500ms）でも最後まで進み、文言も変わる', () => {

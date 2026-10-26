@@ -11,13 +11,15 @@ const opts = {
   gameMonths: config.gameMonths,
   intervalMonths: { min: toMonths(config.news.intervalSec.min), max: toMonths(config.news.intervalSec.max) },
   showMonths: toMonths(config.news.showSec),
+  eventMinMonths: toMonths(config.news.eventMinSec),
 };
 
 describe('T-14 ニュースの仕組み', () => {
-  it('秒の設定を月に換算する（1年5秒で 6〜10秒＝14.4〜24か月、4秒＝9.6か月）', () => {
-    expect(opts.intervalMonths.min).toBeCloseTo(14.4, 9);
-    expect(opts.intervalMonths.max).toBeCloseTo(24, 9);
-    expect(opts.showMonths).toBeCloseTo(9.6, 9);
+  it('秒の設定を月に換算する（1年4秒で 6〜10秒＝18〜30か月、4秒＝12か月、1.5秒＝4.5か月）', () => {
+    expect(opts.intervalMonths.min).toBeCloseTo(18, 9);
+    expect(opts.intervalMonths.max).toBeCloseTo(30, 9);
+    expect(opts.showMonths).toBeCloseTo(12, 9);
+    expect(opts.eventMinMonths).toBeCloseTo(4.5, 9);
   });
 
   it('ランダムの20個は1プレイで2回出ない。間隔は設定どおり（1〜500）', () => {
@@ -32,7 +34,7 @@ describe('T-14 ニュースの仕組み', () => {
         if (i === 0) return;
         const prev = items[i - 1]!;
         expect(it.start).toBeGreaterThanOrEqual(prev.start);
-        // ランダムは、前のニュースが消えてから 6〜10秒（1年5秒で 14.4〜24か月）後に出る
+        // ランダムは、前のニュースが消えてから 6〜10秒（1年4秒で 18〜30か月）後に出る
         if (it.kind === 'random') {
           const gap = it.start - (prev.start + opts.showMonths);
           expect(gap).toBeGreaterThanOrEqual(opts.intervalMonths.min - 1e-9);
@@ -40,6 +42,27 @@ describe('T-14 ニュースの仕組み', () => {
         }
       });
     }
+  });
+
+  it('Q14 出来事のニュースは最低1.5秒（1年4秒で4.5か月）出てから次の出来事のニュースに替わる（1〜500）', () => {
+    let crashes = 0;
+    for (let seed = 1; seed <= 500; seed++) {
+      const { market } = marketOf(seed);
+      const items = buildNewsSchedule(seed, market.events, newsData, opts);
+      items.forEach((it, i) => {
+        const next = items[i + 1];
+        if (it.kind === 'event' && next?.kind === 'event') {
+          expect(next.start - it.start, `seed ${seed}`).toBeGreaterThanOrEqual(opts.eventMinMonths - 1e-9);
+        }
+        if (it.kind === 'event') expect(it.end - it.start, `seed ${seed}`).toBeGreaterThanOrEqual(Math.min(opts.eventMinMonths, config.gameMonths - it.start) - 1e-9);
+      });
+      if (market.scenario === 'crash') {
+        crashes++;
+        // A・B・C は3つとも出る
+        expect(items.filter((i) => ['A', 'B', 'C'].includes(i.id)).map((i) => i.id), `seed ${seed}`).toEqual(['A', 'B', 'C']);
+      }
+    }
+    expect(crashes).toBeGreaterThan(100);
   });
 
   it('暴落と回復で A・B・C、右肩上がりで D、長期下落で E が、出来事の月（重なりは送る）に出る', () => {
