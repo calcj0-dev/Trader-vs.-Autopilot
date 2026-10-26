@@ -49,6 +49,7 @@ export const MESSAGE_KEYS = [
   'result.share',
   'result.shareImage',
   'result.retry',
+  'result.toTitle',
   'result.caution',
   'result.params',
   'result.settings',

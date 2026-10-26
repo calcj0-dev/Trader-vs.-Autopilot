@@ -39,6 +39,7 @@
   "play.orderedThisMonth": "今月は注文済み",
   "result.heading": "{years}年の結果",
   "result.retry": "もう一回",
+  "result.toTitle": "タイトルに戻る",
   "result.caution": "この相場は架空です。将来の値動きは誰にも分かりません。",
   "result.params": "ゲーム用の設定値",
   "result.settings": "設定",

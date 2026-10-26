@@ -91,6 +91,7 @@ export const resultScreen: ScreenFactory = (app) => {
       },
       'btn btn-primary btn-wide',
     ),
+    button(t('result.toTitle'), () => app.go('title'), 'link btn-wide'),
   ]);
 
   const el = h('section', { className: 'screen screen-result' }, [

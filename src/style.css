@@ -782,6 +782,10 @@ button {
   grid-column: 1 / -1;
 }
 
+.main-actions .link.btn-wide {
+  justify-self: center;
+}
+
 .screen-result .link-row,
 .screen-result > .link {
   align-self: center;
