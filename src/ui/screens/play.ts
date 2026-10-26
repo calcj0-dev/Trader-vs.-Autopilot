@@ -1,5 +1,6 @@
 // S3 プレイ（設計書 5.7・8章）。カウントダウン → 進行 → 終了の演出 → 結果画面
 
+import { takeRetry, track } from '../../analytics';
 import { sfx, vibrate } from '../../audio';
 import { config, marketParams, monthMs, newsData, titleData } from '../../data';
 import { formatMoney, formatRate, getCurrency } from '../../currency';
@@ -53,7 +54,10 @@ export const playScreen: ScreenFactory = (app: App) => {
   let phaseElapsed = 0;
 
   // 速さはプレイの開始時に決める（途中で設定を変えても、次のプレイから）
-  const mMs = monthMs(settings.speed);
+  const speed = settings.speed;
+  // 「もう一回」・「最初から」で始まったか（計測の start に付ける。途中でやめても次に持ち越さない）
+  const retry = takeRetry();
+  const mMs = monthMs(speed);
   const clock = new MonthClock(mMs, () => {
     if (closeMonth(session)) onSettled();
     return !isFinished(session);
@@ -187,6 +191,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       } else if (phase === 'countdown' && phaseElapsed >= stepMs * 4) {
         phase = 'playing';
         phaseElapsed = 0;
+        track('start', { retry, chart: settings.chart, speed });
       } else if (phase === 'resuming' && phaseElapsed >= config.timing.resumeMs) {
         phase = 'playing';
         phaseElapsed = 0;
@@ -200,7 +205,7 @@ export const playScreen: ScreenFactory = (app: App) => {
       } else if (phase === 'ending' && phaseElapsed >= config.timing.endingMs) {
         // 結果画面へは1回だけ移る
         ticker.stop();
-        setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData, config.judge) });
+        setLastPlay({ session, result: sessionResult(session, currency.minorUnit, titleData, config.judge), speed });
         app.go('result');
         return;
       }

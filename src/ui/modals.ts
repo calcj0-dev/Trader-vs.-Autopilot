@@ -1,5 +1,6 @@
 // 重ね表示 M1〜M6（設計書 5.9）。#5 では器と、いま作れる中身（設定・設定値・プライバシー）まで
 
+import { markRetry, track } from '../analytics';
 import { config } from '../data';
 import { getLastPlay } from '../game/lastResult';
 import { postText } from '../share/postText';
@@ -43,7 +44,10 @@ const pause: ModalFactory = (app) =>
     [],
     [
       button(t('pause.resume'), () => app.closeModal(), 'btn btn-primary'),
-      linkButton(t('pause.restart'), () => app.go('play')),
+      linkButton(t('pause.restart'), () => {
+        markRetry();
+        app.go('play');
+      }),
       linkButton(t('pause.settings'), () => app.openModal('settings')),
     ],
   );
@@ -116,8 +120,24 @@ const params: ModalFactory = (app) => {
 const image: ModalFactory = (app) => {
   const play = getLastPlay();
   const img = h('img', { className: 'image-preview', attrs: { alt: t('image.alt') } });
-  const shareBtn = button(t('image.shareWithImage'), () => blob && void shareWithImage(play ? postText(play.result) : '', blob), 'btn btn-primary');
-  const saveBtn = button(t('image.save'), () => blob && void saveImage(blob), 'link');
+  const shareBtn = button(
+    t('image.shareWithImage'),
+    () => {
+      if (!blob) return;
+      track('share_click', { method: 'web_share' });
+      void shareWithImage(play ? postText(play.result) : '', blob);
+    },
+    'btn btn-primary',
+  );
+  const saveBtn = button(
+    t('image.save'),
+    () => {
+      if (!blob) return;
+      track('share_click', { method: 'save_image' });
+      void saveImage(blob);
+    },
+    'link',
+  );
   shareBtn.hidden = true;
   saveBtn.disabled = true;
   let blob: Blob | null = null;

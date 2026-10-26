@@ -1,6 +1,7 @@
 // S4 結果（設計書 5.8）。勝敗・積立との差・称号・3本線・3つの金額・種明かし・注意書き・もう一回
 // シェア・結果画像・TAMERU・フォロー（設計書 5.8.2・7.12）
 
+import { markRetry, sellsBucket, track } from '../../analytics';
 import { sfx } from '../../audio';
 import { config, marketParams, titleData } from '../../data';
 import { formatMoney, formatRate, getCurrency } from '../../currency';
@@ -28,7 +29,8 @@ function demoPlay(): LastPlay {
     else if (s.month < 60 || s.month >= 84) placeOrder(s, 'buy');
     closeMonth(s);
   }
-  return { session: s, result: sessionResult(s, c.minorUnit, titleData, config.judge) };
+  // 開発用の結果は計測しない
+  return { session: s, result: sessionResult(s, c.minorUnit, titleData, config.judge), speed: config.defaultYearSeconds, reported: true };
 }
 
 const OUTCOME_SOUND: Record<Outcome, () => void> = {
@@ -52,6 +54,10 @@ export const resultScreen: ScreenFactory = (app) => {
   }
   const { result } = play;
   const o = result.judgement.outcome;
+  if (!play.reported) {
+    play.reported = true;
+    track('finish', { scenario: result.scenario, outcome: o, sells: sellsBucket(result.sells), speed: play.speed });
+  }
 
   const sound = soundButton();
   const thumb = h('img', { className: 'image-thumb-img', attrs: { alt: '' } });
@@ -74,7 +80,15 @@ export const resultScreen: ScreenFactory = (app) => {
   ]);
   const actionsEl = h('div', { className: 'main-actions reveal' }, [
     button(t('result.share'), () => onShare(), 'btn btn-secondary'),
-    button(t('result.retry'), () => app.go('play'), 'btn btn-primary'),
+    button(
+      t('result.retry'),
+      () => {
+        track('retry', {});
+        markRetry();
+        app.go('play');
+      },
+      'btn btn-primary',
+    ),
   ]);
 
   const el = h('section', { className: 'screen screen-result' }, [
@@ -94,9 +108,18 @@ export const resultScreen: ScreenFactory = (app) => {
     h('div', { className: 'tameru-box' }, [
       h('p', { className: 'tameru-heading', text: t('result.tameruHeading') }),
       h('p', { className: 'tameru-body', text: t('result.tameruBody') }),
-      h('a', { className: 'btn btn-primary tameru-btn', text: t('result.tameruButton'), attrs: { href: config.links.tameru, target: '_blank', rel: 'noopener' } }),
+      h('a', {
+        className: 'btn btn-primary tameru-btn',
+        text: t('result.tameruButton'),
+        attrs: { href: config.links.tameru, target: '_blank', rel: 'noopener' },
+        on: { click: () => track('main_app_click', { target: 'tameru' }) },
+      }),
     ]),
-    externalLink(t('result.follow'), config.links.follow),
+    (() => {
+      const a = externalLink(t('result.follow'), config.links.follow);
+      a.addEventListener('click', () => track('main_app_click', { target: 'follow' }));
+      return a;
+    })(),
     h('nav', { className: 'link-row' }, [
       linkButton(t('result.params'), () => app.openModal('params')),
       linkButton(t('result.settings'), () => app.openModal('settings')),
@@ -116,8 +139,13 @@ export const resultScreen: ScreenFactory = (app) => {
   });
   const text = postText(result);
   function onShare(): void {
-    if (imageBlob && canShareImage(imageBlob)) void shareWithImage(text, imageBlob);
-    else openXIntent(text);
+    if (imageBlob && canShareImage(imageBlob)) {
+      track('share_click', { method: 'web_share' });
+      void shareWithImage(text, imageBlob);
+    } else {
+      track('share_click', { method: 'x_intent' });
+      openXIntent(text);
+    }
   }
 
   // ---- 出し方（設計書 5.8.1）：3本線を1.2秒で描く → 勝敗と音 → 残りを0.2秒ずつ ----

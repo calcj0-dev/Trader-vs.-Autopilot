@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; }
+  body { width: 1200px; height: 630px; background: #fff; font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Meiryo", sans-serif; color: #1a1f2b; position: relative; overflow: hidden; }
+  .chart { position: absolute; inset: 0; }
+  .text { position: absolute; left: 80px; top: 70px; width: 640px; }
+  h1 { margin: 0; font-size: 84px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.15; }
+  .sub { margin-top: 18px; font-size: 32px; font-weight: 700; color: #3a4252; }
+  .lead { margin-top: 30px; font-size: 36px; font-weight: 700; line-height: 1.5; }
+  .lead em { font-style: normal; color: #D93A3F; }
+  .foot { position: absolute; left: 80px; right: 80px; bottom: 44px; display: flex; justify-content: space-between; font-size: 22px; color: #6b7385; }
+  .badge { display: inline-block; margin-top: 26px; padding: 10px 24px; border-radius: 999px; background: #1a1f2b; color: #fff; font-size: 26px; font-weight: 700; }
+</style>
+</head>
+<body>
+<svg class="chart" viewBox="0 0 1200 630" id="chart"></svg>
+<div class="text">
+  <h1>積立投資を<br>超えろ！</h1>
+  <div class="sub">― 毎月10万円・20年トレードチャレンジ ―</div>
+  <div class="lead">あなたは<em>積立</em>に勝てるか</div>
+  <div class="badge">80秒で遊べるブラウザゲーム</div>
+</div>
+<div class="foot"><span>Trader vs. Autopilot</span><span>相場は架空です／投資助言ではありません</span></div>
+<script>
+  // 右側に、ローソク足と積立の線を飾りとして描く（乱数は固定）
+  let x = 7;
+  const rnd = () => ((x = (x * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const svg = document.getElementById('chart');
+  const ns = 'http://www.w3.org/2000/svg';
+  const add = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); svg.append(e); return e; };
+  add('rect', { x: 760, y: 70, width: 380, height: 470, rx: 24, fill: '#f5f7fa' });
+  let p = 470; const pts = [];
+  for (let i = 0; i < 22; i++) {
+    const o = p; const c = o - 11 + (rnd() - 0.5) * 60; const h = Math.min(o, c) - rnd() * 18; const l = Math.max(o, c) + rnd() * 18;
+    const cx = 790 + i * 15.5; const col = c <= o ? '#D93A3F' : '#2F6BE0';
+    add('line', { x1: cx, y1: h, x2: cx, y2: l, stroke: col, 'stroke-width': 2 });
+    add('rect', { x: cx - 5, y: Math.min(o, c), width: 10, height: Math.max(3, Math.abs(c - o)), fill: col });
+    pts.push([cx, c]); p = Math.max(130, Math.min(510, c));
+  }
+  add('path', { d: 'M790 500 L1115 250', stroke: '#1E9E6A', 'stroke-width': 6, 'stroke-linecap': 'round', fill: 'none' });
+  add('text', { x: 1112, y: 236, 'text-anchor': 'end', 'font-size': 24, 'font-weight': 700, fill: '#1E9E6A' }).textContent = '積立';
+</script>
+</body>
+</html>
