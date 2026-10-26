@@ -50,9 +50,9 @@ describe('T-11 投稿文', () => {
     expect(xLength('abc')).toBe(3 + 1 + 23);
   });
 
-  it('シェアするURLに相場番号は付けない。計測用のパラメータを付ける', () => {
+  it('シェアするURLは作品のURLだけ（相場番号も計測用の文字も付けない）', () => {
     expect(siteUrl()).toBe('https://trader-vs-autopilot.vercel.app/');
-    expect(shareUrl()).toBe('https://trader-vs-autopilot.vercel.app/?utm_source=x&utm_medium=share&utm_campaign=baka016');
+    expect(shareUrl()).toBe('https://trader-vs-autopilot.vercel.app/');
     expect(shareUrl()).not.toMatch(/seed/);
   });
 });

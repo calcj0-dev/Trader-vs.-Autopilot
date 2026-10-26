@@ -28,7 +28,7 @@ export type GameConfig = {
   /** eventMinSec：出来事のニュースを最低この秒数は出す（次の出来事のニュースはそのあと。Q14） */
   news: { intervalSec: Range; showSec: number; eventMinSec: number };
   colors: { up: string; down: string; gold: string; tsumitate: string; principal: string };
-  links: { tameru: string; follow: string; xIntent: string; shareQuery: string; googlePrivacy: string; gaOptout: string };
+  links: { tameru: string; follow: string; xIntent: string; googlePrivacy: string; gaOptout: string };
 };
 
 export const config = configJson satisfies GameConfig;
@@ -58,8 +58,7 @@ export function siteUrl(): string {
   return typeof location === 'undefined' ? '' : location.origin + location.pathname;
 }
 
-/** シェアするURL（相場番号は付けない） */
+/** シェアするURL。作品のURLだけ（相場番号も計測用の文字も付けない。投稿画面で短く見えるように） */
 export function shareUrl(): string {
-  const base = siteUrl();
-  return `${base}${base.includes('?') ? '&' : '?'}${config.links.shareQuery}`;
+  return siteUrl();
 }

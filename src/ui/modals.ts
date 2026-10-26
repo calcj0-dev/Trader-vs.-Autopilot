@@ -146,7 +146,7 @@ const image: ModalFactory = (app) => {
     void resultImage(play).then((b) => {
       blob = b;
       if (!b) return;
-      shareBtn.hidden = !canShareImage(b);
+      shareBtn.hidden = !(matchMedia('(pointer: coarse)').matches && canShareImage(b));
       saveBtn.disabled = false;
       return toDataUrl(b).then((u) => {
         img.src = u;

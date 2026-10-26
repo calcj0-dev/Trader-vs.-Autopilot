@@ -19,6 +19,7 @@ import { gameVars, soundButton } from '../parts';
 import { ensureHistoryEntry } from './play';
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = () => matchMedia('(pointer: coarse)').matches;
 
 /** 開発用：結果画面を直接開いたときは、計算例1（相場番号7・毎月買い、60で売り、84から再び毎月買う）の結果を出す */
 function demoPlay(): LastPlay {
@@ -79,7 +80,8 @@ export const resultScreen: ScreenFactory = (app) => {
     row(t('result.principal'), result.principal[result.principal.length - 1] ?? 0, 'principal'),
   ]);
   const actionsEl = h('div', { className: 'main-actions reveal' }, [
-    button(t('result.share'), () => onShare(), 'btn btn-secondary'),
+    button(t('result.share'), () => onPostX(), 'btn btn-secondary'),
+    button(t('result.shareImage'), () => onShareImage(), 'btn btn-secondary'),
     button(
       t('result.retry'),
       () => {
@@ -87,7 +89,7 @@ export const resultScreen: ScreenFactory = (app) => {
         markRetry();
         app.go('play');
       },
-      'btn btn-primary',
+      'btn btn-primary btn-wide',
     ),
   ]);
 
@@ -138,13 +140,18 @@ export const resultScreen: ScreenFactory = (app) => {
     }
   });
   const text = postText(result);
-  function onShare(): void {
-    if (imageBlob && canShareImage(imageBlob)) {
+  /** Xで投稿：PC・スマホとも X の投稿画面（投稿文＋URL）。画像は付かず、URL のカード画像（OGP）が出る */
+  function onPostX(): void {
+    track('share_click', { method: 'x_intent' });
+    openXIntent(text);
+  }
+  /** 結果画像をシェア：スマホは結果画像付きで共有メニュー。PC・共有できない端末は結果画像の画面（保存できる） */
+  function onShareImage(): void {
+    if (isTouch() && imageBlob && canShareImage(imageBlob)) {
       track('share_click', { method: 'web_share' });
       void shareWithImage(text, imageBlob);
     } else {
-      track('share_click', { method: 'x_intent' });
-      openXIntent(text);
+      app.openModal('image');
     }
   }
 
