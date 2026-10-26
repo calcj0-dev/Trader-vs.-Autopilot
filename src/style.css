@@ -214,8 +214,11 @@ button {
 
 .credit {
   margin-top: 8px;
-  color: var(--text-sub);
   font-size: 12px;
+}
+
+.credit .link {
+  font-size: inherit;
 }
 
 /* ---- S2 ルール ---- */
